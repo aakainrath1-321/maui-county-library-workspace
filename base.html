@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d5071">
+  <title>{% block title %}Maui County Library Workspace Prototype{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css', v='9-approved') }}">
+</head>
+<body data-page="{% block page_id %}workspace{% endblock %}">
+  <div class="prototype-bar">
+    <div class="prototype-bar-inner">
+      <div><span class="info-dot">i</span><strong>Public Prototype:</strong> This workspace is publicly accessible for demonstration and feedback. Secure staff sign-in can be enabled for deployment.</div>
+      <button type="button" id="securityTopLink">🔒 About authentication &amp; security</button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('home') }}">
+      <img src="{{ url_for('static',filename='favicon.svg') }}" alt="">
+      <span><strong>Maui County Library Workspace</strong><small>Prototype</small></span>
+    </a>
+
+    <nav class="main-nav" aria-label="Primary navigation">
+      <a href="{{ url_for('home') }}" class="nav-home">⌂ <span>Staff Hub</span></a>
+      <a href="{{ url_for('home') }}#libraries">▣ <span>Libraries</span></a>
+      <a href="{{ url_for('home') }}#staff-board">♧ <span>Staff Board</span></a>
+      <a href="{{ url_for('prototype') }}">♜ <span>Prototype</span></a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="header-button edit-header-button" data-edit-toggle>✎ Edit Workspace</button>
+      <button class="header-button atlas-header-button" data-atlas-open>◯ Ask Atlas</button>
+      <button class="security-chip" id="securityStatusBtn" type="button">
+        <span class="lock-tile">🔒</span>
+        <span><strong>Public Prototype</strong><small>Secure sign-in supported</small></span>
+        <span class="chev">⌄</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="global-edit-banner" id="globalEditBanner">
+    <div><strong>Edit Mode is active</strong><span>Prototype changes are saved only in this browser. A production workspace would require authorized staff sign-in.</span></div>
+    <button type="button" data-edit-toggle>Done Editing</button>
+  </div>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer class="site-footer">
+    <div class="footer-actions">
+      <button data-feedback-open>◌ Feedback</button>
+      <button data-feedback-open>△ Report an Issue</button>
+      <button data-feedback-open>☆ Suggest a Feature</button>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 Maui County Library Workspace Prototype</span>
+      <span>•</span>
+      <span>Built for HSPLS staff evaluation</span>
+    </div>
+  </footer>
+
+  <button class="floating-feedback" data-feedback-open>Feedback</button>
+
+  <aside class="drawer atlas-drawer" id="atlasDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><span class="kicker">Workspace Intelligence</span><h2>Ask Atlas</h2></div>
+      <button class="icon-button" data-close aria-label="Close Atlas">×</button>
+    </div>
+    <div class="atlas-intro">
+      <div class="atlas-orb">A</div>
+      <p><strong>Hi, I'm Atlas.</strong><br>I can help you navigate, organize, edit, and understand this workspace.</p>
+    </div>
+    <div class="atlas-thread" id="atlasThread">
+      <div class="message atlas"><p>How can I help you today?</p></div>
+    </div>
+    <div class="suggestion-row">
+      <button data-atlas-prompt="Take me to Wailuku policies">Wailuku policies</button>
+      <button data-atlas-prompt="Where do adult order lists go?">Order lists</button>
+      <button data-atlas-prompt="How do I edit this workspace?">Editing help</button>
+    </div>
+    <form class="atlas-compose" id="atlasForm">
+      <input id="atlasInput" placeholder="Ask Atlas anything…" autocomplete="off">
+      <button aria-label="Send">➤</button>
+    </form>
+    <small class="prototype-note">Atlas uses only public prototype context and has no access to restricted HSPLS systems or records.</small>
+  </aside>
+
+  <aside class="drawer security-drawer" id="securityDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><span class="kicker">Authentication &amp; Security</span><h2>Designed for secure staff access.</h2></div>
+      <button class="icon-button" id="closeSecurity" aria-label="Close security information">×</button>
+    </div>
+    <div class="security-intro">
+      <div class="security-shield">🔒</div>
+      <p>This prototype is intentionally public for demonstration, testing, and feedback. A deployed workspace can require authenticated staff access without changing the underlying structure.</p>
+    </div>
+    <div class="security-capabilities">
+      <article><span>Prototype</span><strong>Public access</strong><p>Anyone with the link can explore the presentation shell.</p></article>
+      <article><span>Production concept</span><strong>Staff authentication</strong><p>Organizational sign-in can protect internal resources.</p></article>
+      <article><span>Editing</span><strong>Authorized users</strong><p>Permanent changes can be limited to approved staff.</p></article>
+      <article><span>Permissions</span><strong>Role-based access</strong><p>Viewing, contributing, editing, and administration can be separated.</p></article>
+    </div>
+    <div class="security-note">
+      <strong>No restricted operational content is included in this prototype.</strong>
+      <p>The public editing demonstration is browser-local and does not alter the shared site.</p>
+    </div>
+  </aside>
+
+  <aside class="drawer feedback-drawer" id="feedbackDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><span class="kicker">Help shape the workspace</span><h2>Give Feedback</h2></div>
+      <button class="icon-button" data-close aria-label="Close feedback">×</button>
+    </div>
+    <p class="muted">Suggestions, critiques, design feedback, and feature ideas are welcome.</p>
+    <form id="feedbackForm" class="feedback-form">
+      <label class="choice-card"><input type="radio" name="identity" value="anonymous" checked><span><strong>Submit anonymously</strong><small>Your name is not required.</small></span></label>
+      <label class="choice-card"><input type="radio" name="identity" value="named"><span><strong>Use my name</strong><small>Attach your name to the feedback.</small></span></label>
+      <label id="feedbackNameWrap" class="hidden">Name<input name="name" placeholder="Your name"></label>
+      <label>Branch / area (optional)<select name="branch"><option value="">General / countywide</option>{% for b in branches %}<option>{{ b.name }}</option>{% endfor %}<option>Atlas</option><option>Staff Hub</option><option>Editing</option></select></label>
+      <label>Feedback type<select name="category"><option>Suggestion</option><option>Feature Idea</option><option>Design / UI</option><option>Problem</option><option>General Feedback</option></select></label>
+      <label>Your feedback<textarea name="message" rows="6" placeholder="What works? What doesn't? What should change?" required></textarea></label>
+      <button class="primary-button" type="submit">Submit Feedback</button>
+      <div id="feedbackStatus" class="form-status"></div>
+    </form>
+  </aside>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="toast" id="toast"></div>
+  <script src="{{ url_for('static',filename='js/app.js', v='9-approved') }}"></script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Staff Hub | Maui County Library Workspace Prototype{% endblock %}
+{% block page_id %}home{% endblock %}
+{% block content %}
+<section class="home-hero">
+  <div class="home-hero-media" aria-hidden="true"></div>
+  <div class="home-hero-shell">
+    <div class="hero-copy">
+      <h1>One Workspace.<br>Eight Libraries.</h1>
+      <div class="hero-accent"></div>
+      <p>Navigate branch resources, shared tools, updates, and collaborative spaces across Maui County libraries.</p>
+
+      <div class="hero-search">
+        <span class="search-glyph">⌕</span>
+        <input id="workspaceSearch" placeholder="Search branches, sections, or resources…">
+        <select id="branchFilter" aria-label="Filter library">
+          <option value="">All Libraries</option>
+          {% for branch in branches %}<option value="{{ branch.slug }}">{{ branch.name }}</option>{% endfor %}
+        </select>
+        <button data-atlas-open>Ask Atlas</button>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+
+    <aside class="workspace-snapshot">
+      <span class="snapshot-title">Workspace Snapshot</span>
+      <div class="snapshot-item">
+        <span class="snapshot-icon blue">▤</span><div><strong>8</strong><span>Branch Workspaces</span></div><small>Across Maui County</small>
+      </div>
+      <div class="snapshot-item">
+        <span class="snapshot-icon green">◎</span><div><strong>4</strong><span>Shared Core Areas</span></div><small>Consistent structure</small>
+      </div>
+      <div class="snapshot-item">
+        <span class="snapshot-icon blue">✦</span><div><strong>Atlas</strong><span>Workspace Assistant</span></div><small>Gemini powered</small>
+      </div>
+      <div class="snapshot-item">
+        <span class="snapshot-icon green">↗</span><div><strong>Live</strong><span>Prototype Feedback</span></div><small>Named or anonymous</small>
+      </div>
+      <div class="snapshot-hspls">
+        <span>Part of the</span>
+        <img src="{{ url_for('static',filename='assets/hspls-main-logo-color.jpg') }}" alt="Hawaiʻi State Public Library System">
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="library-section content-shell" id="libraries">
+  <div class="section-title-row">
+    <div><span class="section-icon">▥</span><h2>Our Libraries</h2></div>
+    <a href="#libraries">View all libraries →</a>
+  </div>
+
+  <div class="library-grid-v9">
+    {% for branch in branches %}
+      {% set short = branch.name.replace(' Public/School Library','').replace(' Public Library','') %}
+      {% set kind = 'Public/School Library' if 'Public/School' in branch.name else 'Public Library' %}
+      <a class="library-card-v9" href="{{ url_for('branch', branch_slug=branch.slug) }}" data-editable-card data-title="{{ short }}">
+        <div class="branch-photo-wrap">
+          <img src="{{ url_for('static',filename='assets/branches/' + branch.photo) }}" alt="{{ branch.name }}">
+          <div class="card-edit-actions">
+            <button type="button" data-edit-card="image">Change image</button>
+            <button type="button" data-edit-card="title">Edit label</button>
+          </div>
+        </div>
+        <div class="branch-card-copy">
+          <div><h3>{{ short }}</h3><span>{{ kind }}</span></div>
+          <strong>›</strong>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="content-shell dashboard-grid">
+  <article class="dashboard-card">
+    <div class="dashboard-card-head">
+      <div><span class="eyebrow">Navigation</span><h2>Quick Links</h2></div>
+      <button class="edit-only" data-editor-add="link">＋ Add Link</button>
+    </div>
+    <div class="quick-link-list editable-zone" data-zone="quick-links">
+      {% for item in quick_links %}
+      <a href="{{ item.url }}" {% if item.url.startswith('http') %}target="_blank" rel="noopener"{% endif %}><span><small>{{ item.type }}</small><strong>{{ item.label }}</strong></span><b>↗</b></a>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="dashboard-card">
+    <div class="dashboard-card-head">
+      <div><span class="eyebrow">Activity</span><h2>What's New</h2></div>
+      <button class="edit-only" data-editor-add="update">＋ Add Update</button>
+    </div>
+    <div class="activity-list editable-zone" data-zone="updates">
+      <div class="activity-row"><span></span><div><strong>Prototype workspace ready</strong><p>Explore branch workspaces, Atlas, editing, feedback, and the shared county structure.</p></div></div>
+      <div class="activity-row"><span></span><div><strong>Real branch identity retained</strong><p>Each branch uses the actual exterior imagery supplied for the prototype.</p></div></div>
+    </div>
+  </article>
+</section>
+
+<section class="content-shell staff-board-section" id="staff-board">
+  <div class="section-heading">
+    <div><span class="eyebrow">Collaboration</span><h2>Staff Board</h2></div>
+    <p>A lightweight countywide space for useful updates, questions, ideas, and shared practices.</p>
+  </div>
+  <div class="board-layout">
+    <div class="board-feed editable-zone" id="boardFeed" data-zone="staff-board">
+      {% for post in sample_posts %}
+      <article class="board-post"><div class="post-meta"><strong>{{ post.name }}</strong><span>{{ post.branch }} · {{ post.time }}</span></div><p>{{ post.body }}</p></article>
+      {% endfor %}
+    </div>
+    <aside class="board-compose">
+      <span class="kicker">Prototype interaction</span><h3>Share something</h3>
+      <p class="muted">Demo posts save only in this browser so the public prototype stays safe.</p>
+      <input id="boardName" placeholder="Name or branch">
+      <textarea id="boardMessage" rows="5" placeholder="Share an idea, question, or update…"></textarea>
+      <button class="primary-button" id="boardPostButton">Post to my demo board</button>
+    </aside>
+  </div>
+</section>
+
+<div class="edit-toolbar" id="editToolbar" aria-hidden="true">
+  <div><strong>Edit Workspace</strong><span>Local prototype mode — changes are visible on this browser only.</span></div>
+  <div class="edit-toolbar-actions">
+    <button data-editor-add="section">＋ Section</button>
+    <button data-editor-add="folder">＋ Folder</button>
+    <button data-editor-add="file">＋ File</button>
+    <button data-editor-add="link">＋ Link</button>
+    <button data-editor-add="update">＋ Update</button>
+    <button data-editor-reset>Reset Edits</button>
+    <button class="done-editing" data-edit-toggle>Done</button>
+  </div>
+</div>
+
+<div class="editor-modal" id="editorModal" aria-hidden="true">
+  <div class="editor-dialog">
+    <div class="drawer-head">
+      <div><span class="kicker">Prototype Edit Mode</span><h2 id="editorTitle">Add item</h2></div>
+      <button class="icon-button" id="editorClose" type="button">×</button>
+    </div>
+    <form id="editorForm">
+      <input type="hidden" name="kind" id="editorKind">
+      <label>Title<input name="title" id="editorItemTitle" required placeholder="Resource title"></label>
+      <label id="editorUrlWrap">Link / URL<input name="url" id="editorUrl" placeholder="https://…"></label>
+      <label>Description<textarea name="description" id="editorDescription" rows="4" placeholder="Optional description"></textarea></label>
+      <label id="editorFileWrap">Choose file<input type="file" id="editorFile"></label>
+      <div class="editor-dialog-actions">
+        <button type="button" class="soft-button" id="editorCancel">Cancel</button>
+        <button type="submit" class="primary-button">Save to Demo</button>
+      </div>
+      <p class="prototype-note">Permanent shared editing is intentionally disabled in this public prototype. A production deployment can put editing behind staff authentication and role-based permissions.</p>
+    </form>
+  </div>
+</div>
+{% endblock %}
