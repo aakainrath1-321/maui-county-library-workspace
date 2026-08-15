@@ -1,0 +1,1 @@
+V5 applies the clean palette directly to the selectors used by the application. The visual system is warm white, muted ocean teal, soft sage, restrained Lokelani rose, subtle sand warmth, thin borders, low-contrast shadows, and reduced motion/noise.

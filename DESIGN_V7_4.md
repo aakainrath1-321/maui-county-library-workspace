@@ -1,0 +1,1 @@
+V7.4 preserves real branch logos/exterior images and adds visible future authentication/security capability.
