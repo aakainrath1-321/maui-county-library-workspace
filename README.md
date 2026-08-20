@@ -1,54 +1,66 @@
-# Maui County Library Workspace Prototype v2.1
+# Maui County Library Workspace — Master Prototype
 
-Presentation-safe Flask prototype for an interactive Maui County staff workspace.
+Final public-prototype release for a shared Maui County library staff workspace spanning eight branch workspaces.
 
-## Included
-- Countywide Staff Hub and eight branch workspaces
-- Original Google Sites structure repeated across every branch
-- Branch logos and exterior photos
-- Lahaina Sketchfab model and Hana Meshy model integration/fallback
-- Atlas embedded workspace intelligence and navigation assistant
-- Universal workspace search
-- Prototype Edit Mode with browser-local demo changes
-- Staff Board with browser-local demo posts
-- Named or anonymous feedback saved to SQLite
-- Authentication/role-based-access concept page
-- Lokelani-inspired favicon
-- Responsive design and Render configuration
+## Master Prototype features
+- One countywide Staff Hub and eight branch workspaces
+- Consistent Management, Operations, Services, and Communications hierarchy
+- Gemini-powered Atlas with page context, conversation history, navigation actions, search handoff, feedback/Edit Mode/My Workspace actions, and presentation-safe boundaries
+- Search 2.0 with branch filtering, typed results, keyboard `/` shortcut, and Atlas fallback
+- My Workspace with browser-local favorites and recently viewed locations
+- Staff Board 2.0 with categories, branch filtering, reactions, and browser-local demo posts
+- Browser-local Edit Mode with add/remove/reset workflows
+- Activity Center filters and prototype update feed
+- First-visit guided onboarding tour
+- Installable PWA manifest, service worker, caching, online/offline feedback, and offline screen
+- Custom 404 and 500 experiences
+- Responsive/mobile layout, keyboard focus treatment, skip link, reduced-motion support, accessible labels, and improved drawer behavior
+- Custom Lokelani-inspired eight-branch workspace emblem and resilient branch-image fallbacks
+- Existing anonymous/named feedback endpoint preserved
+- Lahaina Sketchfab and Hana Meshy model support
 
-## Safety model
-No real internal HSPLS operational content is included. Public Edit Mode does not modify the shared application; demo edits and Staff Board posts remain in the current browser. Feedback is the only server-side submission in this prototype.
+## Intentional boundaries
+The Master Prototype does **not** implement production authentication, permanent production storage, real HSPLS internal content, organizational user accounts, or live Microsoft/SharePoint/OneDrive integrations. Those are adoption-phase items requiring organizational approval, governance, and security decisions.
 
-Atlas is intentionally presentation-safe and structure-aware. It can navigate the prototype and initiate UI actions without sending data to an external AI service. A future approved version can connect Atlas to an approved LLM and internal knowledge layer.
+Browser-local features (favorites, recent history, Staff Board demo content, Edit Mode demo content, local usage counters) remain on the current device. Feedback continues to use the existing prototype SQLite endpoint and should not be treated as durable production storage on an ephemeral host.
 
-## Run locally
-`py -m pip install -r requirements.txt`
+## Missing branch photo assets
+The GitHub ZIP used for this Master build did not include `static/assets/branches/*` or `static/assets/logos/*`, although V9 referenced them. The Master UI is resilient: missing exterior images fall back to designed branch-cover treatments instead of broken image icons.
 
-`py app.py`
+If you have the original branch exterior images, restore them under:
 
+`static/assets/branches/`
+
+using these filenames:
+- `hana.png`
+- `kahului.jpg`
+- `kihei.jpg`
+- `lahaina.jpg`
+- `lanai.jpg`
+- `makawao.jpg`
+- `molokai.jpg`
+- `wailuku.jpg`
+
+The Master templates will automatically use them when present.
+
+## Local run
+```bash
+py -m pip install -r requirements.txt
+py app.py
+```
 Open `http://127.0.0.1:5000`.
 
-## Deployment
-The repository includes `render.yaml` and Gunicorn for Render deployment. Keep credentials and real internal content out of the public repository/deployment.
+Atlas requires the `GEMINI_API_KEY` environment variable. Do not commit API keys or secrets to GitHub.
 
-## 3D models
-Lahaina uses the Sketchfab UID supplied for the project and is correctly labeled as Lahaina Public Library. Hana uses the supplied Meshy shared model URL; because third-party pages can restrict iframe embedding, an Open Model fallback is included. For the most reliable Hana embed later, export the model as GLB and host it with a web 3D viewer.
+## Existing Render deployment
+Keep the existing Render Web Service connected to the same GitHub repository. Updating that repository triggers a redeploy while preserving the existing Render service URL.
 
+Recommended sequence:
+1. Run and inspect the Master build locally.
+2. Confirm Atlas works with your local/environment key configuration.
+3. Push the Master files to the existing GitHub repository.
+4. Let the existing Render service redeploy.
+5. Smoke-test `/`, a branch page, a section page, Atlas, search, feedback, and the PWA manifest.
 
-## v2.1 fixes
-
-- Fixed branch and section page template errors caused by a Jinja dictionary-method naming collision.
-- Upgraded Atlas responses with contextual branch awareness, more natural navigation, hierarchy guidance, capability explanations, and better intent handling.
-
-
-## Atlas Gemini Upgrade
-
-Atlas is now Gemini-powered and conversational. See `ATLAS_SETUP.md`.
-
-
-## V5 changes
-
-- Atlas now retries transient Gemini 503/429 errors automatically.
-- Atlas falls back from `gemini-3.6-flash` to `gemini-3.5-flash-lite` when needed.
-- User-facing Atlas errors are now friendly instead of exposing raw API exceptions.
-- The visual theme now changes the actual selectors used by the app: warm white, muted ocean teal, soft sage, restrained Lokelani rose, thinner borders, gentler shadows, and reduced visual noise.
+## Adoption-phase roadmap
+Only after formal adoption: organizational authentication/SSO, durable managed database/storage, role-based authorization, approved document/content ingestion, Microsoft integration, production logging/backups/retention, and security/governance review.

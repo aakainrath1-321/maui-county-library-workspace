@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#fff9f7"/><g transform="translate(32 31)" fill="#b96f7e"><ellipse rx="10" ry="18" transform="rotate(0) translate(0 -9)"/><ellipse rx="10" ry="18" transform="rotate(72) translate(0 -9)"/><ellipse rx="10" ry="18" transform="rotate(144) translate(0 -9)"/><ellipse rx="10" ry="18" transform="rotate(216) translate(0 -9)"/><ellipse rx="10" ry="18" transform="rotate(288) translate(0 -9)"/><circle r="9" fill="#c98592"/><circle r="4" fill="#f0c68b"/></g><path d="M31 49c2 4 2 7 1 11M31 54c-5-1-8-3-10-6M33 55c5-1 8-3 10-6" fill="none" stroke="#718977" stroke-width="2.5" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lokelani emblem">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d98da0"/><stop offset="1" stop-color="#a85f74"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="#f7f2ec"/>
+  <g transform="translate(32 32)">
+    <ellipse rx="9" ry="17" fill="url(#g)" transform="rotate(0) translate(0 -10)"/>
+    <ellipse rx="9" ry="17" fill="url(#g)" transform="rotate(72) translate(0 -10)"/>
+    <ellipse rx="9" ry="17" fill="url(#g)" transform="rotate(144) translate(0 -10)"/>
+    <ellipse rx="9" ry="17" fill="url(#g)" transform="rotate(216) translate(0 -10)"/>
+    <ellipse rx="9" ry="17" fill="url(#g)" transform="rotate(288) translate(0 -10)"/>
+    <circle r="8" fill="#f2c9a4"/><circle r="3" fill="#8a5b47"/>
+  </g>
+</svg>

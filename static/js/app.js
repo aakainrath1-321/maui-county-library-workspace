@@ -1,140 +1,78 @@
-function renderAtlasMarkdown(text){
- const safe=esc(text);
- let s=safe.replace(/`([^`\n]+)`/g,'<code>$1</code>')
- .replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')
- .replace(/__([^_\n]+)__/g,'<strong>$1</strong>')
- .replace(/(^|[\s(])\*([^*\n]+)\*(?=$|[\s).,!?:;])/g,'$1<em>$2</em>')
- .replace(/(^|[\s(])_([^_\n]+)_(?=$|[\s).,!?:;])/g,'$1<em>$2</em>');
- const lines=s.split(/\r?\n/);let html='',list='';
- const close=()=>{if(list){html+=`</${list}>`;list=''}};
- for(const raw of lines){const line=raw.trim();let m=line.match(/^[-•]\s+(.+)/);
-  if(m){if(list!=='ul'){close();html+='<ul>';list='ul'}html+=`<li>${m[1]}</li>`;continue}
-  m=line.match(/^\d+[.)]\s+(.+)/);
-  if(m){if(list!=='ol'){close();html+='<ol>';list='ol'}html+=`<li>${m[1]}</li>`;continue}
-  close();if(line)html+=`<p>${line}</p>`;
- }close();return html||'<p></p>';
-}
-const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)],body=document.body,scrim=$('#scrim'),toast=$('#toast');function showToast(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}function openDrawer(el){el.classList.add('open');scrim.classList.add('open')}function closeDrawers(){$$('.drawer').forEach(d=>d.classList.remove('open'));scrim.classList.remove('open')}$$('[data-atlas-open]').forEach(b=>b.addEventListener('click',()=>openDrawer($('#atlasDrawer'))));$$('[data-feedback-open]').forEach(b=>b.addEventListener('click',()=>openDrawer($('#feedbackDrawer'))));$$('[data-close]').forEach(b=>b.addEventListener('click',closeDrawers));scrim.addEventListener('click',closeDrawers);
-let editMode=localStorage.getItem('mclw-edit-mode')==='1';function applyEdit(){body.classList.toggle('edit-mode',editMode);$$('[data-edit-toggle]').forEach(b=>b.textContent=editMode?'✓ Done Editing':'✎ Edit Workspace')}applyEdit();$$('[data-edit-toggle]').forEach(b=>b.addEventListener('click',()=>{editMode=!editMode;localStorage.setItem('mclw-edit-mode',editMode?'1':'0');applyEdit();showToast(editMode?'Prototype Edit Mode enabled':'Edit Mode closed')}));$$('[data-demo-add]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const kind=b.dataset.demoAdd||'resource',name=prompt(`Demo ${kind} name:`);if(name){localStorage.setItem(`mclw-demo-${Date.now()}`,JSON.stringify({kind,name,path:location.pathname}));showToast(`${name} added to your local demo`)}}));
-const search=$('#workspaceSearch'),results=$('#searchResults');let timer;search?.addEventListener('input',()=>{clearTimeout(timer);const q=search.value.trim();if(!q){results.classList.remove('open');return}timer=setTimeout(async()=>{const data=await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r=>r.json());results.innerHTML=data.map(x=>`<a href="${x.url}">${x.label}</a>`).join('')||'<a>No exact result — ask Atlas</a>';results.classList.add('open')},150)});
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}const atlasForm=$('#atlasForm'),atlasInput=$('#atlasInput'),thread=$('#atlasThread');
-const atlasHistoryKey='mclw-atlas-history-v1';
-let atlasHistory=[];
-try{atlasHistory=JSON.parse(sessionStorage.getItem(atlasHistoryKey)||'[]')}catch{atlasHistory=[]}
-function saveAtlasHistory(){sessionStorage.setItem(atlasHistoryKey,JSON.stringify(atlasHistory.slice(-16)))}
-function atlasActionElement(a){
-  if(a.type==='navigate'&&a.url){const el=document.createElement('a');el.href=a.url;el.textContent=a.label||'Open';return el}
-  const el=document.createElement('button');el.type='button';el.textContent=a.label||'Run action';
-  el.onclick=()=>{
-    if(a.type==='open_feedback'){closeDrawers();setTimeout(()=>openDrawer($('#feedbackDrawer')),120)}
-    if(a.type==='enter_edit_mode'){editMode=true;localStorage.setItem('mclw-edit-mode','1');applyEdit();showToast('Atlas enabled Edit Mode')}
-  };
-  return el
-}
-async function askAtlas(q){
-  if(!q)return;
-  thread.insertAdjacentHTML('beforeend',`<div class="message user">${esc(q)}</div>`);
-  atlasHistory.push({role:'user',text:q});saveAtlasHistory();atlasInput.value='';
-  const loader=document.createElement('div');loader.className='message atlas';loader.textContent='Thinking…';thread.appendChild(loader);thread.scrollTop=thread.scrollHeight;
-  try{
-    const res=await fetch('/api/atlas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,history:atlasHistory.slice(0,-1),context:location.pathname})});
-    const data=await res.json();loader.remove();
-    if(!res.ok||!data.ok)throw new Error(data.error||'Atlas is unavailable.');
-    thread.insertAdjacentHTML('beforeend',`<div class="message atlas">${renderAtlasMarkdown(data.reply)}</div>`);
-    atlasHistory.push({role:'model',text:data.reply});saveAtlasHistory();
-    if(data.actions?.length){
-      const wrap=document.createElement('div');wrap.className='atlas-actions';
-      data.actions.forEach(a=>wrap.appendChild(atlasActionElement(a)));
-      thread.appendChild(wrap)
-    }
-  }catch(e){
-    loader.remove();
-    thread.insertAdjacentHTML('beforeend',`<div class="message atlas">Atlas couldn’t connect: ${esc(e.message)}</div>`)
-  }
-  thread.scrollTop=thread.scrollHeight
-}
-atlasForm?.addEventListener('submit',e=>{e.preventDefault();askAtlas(atlasInput.value.trim())});
-$$('[data-atlas-prompt]').forEach(b=>b.addEventListener('click',()=>askAtlas(b.dataset.atlasPrompt)));
-$$('input[name="identity"]').forEach(r=>r.addEventListener('change',()=>$('#feedbackNameWrap').classList.toggle('hidden',$('input[name="identity"]:checked').value!=='named')));$('#feedbackForm')?.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.currentTarget),p=Object.fromEntries(fd.entries());p.anonymous=p.identity!=='named';const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}),data=await res.json();$('#feedbackStatus').textContent=data.message||data.error;if(res.ok){showToast('Feedback saved. Thank you.');e.currentTarget.reset();$('#feedbackNameWrap').classList.add('hidden')}});
-const boardKey='mclw-demo-board';function renderPosts(){const feed=$('#boardFeed');if(!feed)return;let posts=[];try{posts=JSON.parse(localStorage.getItem(boardKey)||'[]')}catch{}posts.forEach(p=>feed.insertAdjacentHTML('beforeend',`<article class="board-post"><div class="post-meta"><strong>${esc(p.name||'Demo staff member')}</strong><span>Local demo · This device</span></div><p>${esc(p.body)}</p></article>`))}renderPosts();$('#boardPostButton')?.addEventListener('click',()=>{const name=$('#boardName').value.trim(),msg=$('#boardMessage').value.trim();if(!msg)return showToast('Write a short post first.');let posts=[];try{posts=JSON.parse(localStorage.getItem(boardKey)||'[]')}catch{}posts.push({name:name||'Demo staff member',body:msg});localStorage.setItem(boardKey,JSON.stringify(posts));location.reload()});
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const body=document.body, scrim=$('#scrim'), toast=$('#toast');
+const STORE={favorites:'mclw-master-favorites',recent:'mclw-master-recent',board:'mclw-master-board',edits:'mclw-master-edits',editMode:'mclw-edit-mode',tour:'mclw-master-tour-seen',atlas:'mclw-atlas-history-master',analytics:'mclw-master-analytics'};
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function readJSON(k,d=[]){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}}
+function writeJSON(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function showToast(msg){if(!toast)return;toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2300)}
+function recordEvent(name,meta={}){const data=readJSON(STORE.analytics,[]);data.push({name,meta,at:new Date().toISOString()});writeJSON(STORE.analytics,data.slice(-100));}
 
-(function(){const b=document.getElementById('securityStatusBtn'),d=document.getElementById('securityDrawer'),c=document.getElementById('closeSecurity');if(!b||!d)return;function open(){document.querySelectorAll('.drawer').forEach(x=>{if(x!==d){x.classList.remove('open');x.setAttribute('aria-hidden','true')}});d.classList.add('open');d.setAttribute('aria-hidden','false')}function close(){d.classList.remove('open');d.setAttribute('aria-hidden','true')}b.addEventListener('click',open);if(c)c.addEventListener('click',close);document.addEventListener('keydown',e=>{if(e.key==='Escape')close()})})();
+/* Accessible drawers */
+let lastFocus=null;
+function openDrawer(el){if(!el)return;lastFocus=document.activeElement;$$('.drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});el.classList.add('open');el.setAttribute('aria-hidden','false');scrim?.classList.add('open');setTimeout(()=>el.focus(),40);recordEvent('drawer_open',{id:el.id})}
+function closeDrawers(){$$('.drawer').forEach(d=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')});scrim?.classList.remove('open');if(lastFocus?.focus)lastFocus.focus()}
+$$('[data-atlas-open]').forEach(b=>b.addEventListener('click',()=>openDrawer($('#atlasDrawer'))));
+$$('[data-feedback-open]').forEach(b=>b.addEventListener('click',()=>openDrawer($('#feedbackDrawer'))));
+$$('[data-my-workspace-open]').forEach(b=>b.addEventListener('click',()=>{renderMyWorkspace();openDrawer($('#myWorkspaceDrawer'))}));
+$$('[data-close]').forEach(b=>b.addEventListener('click',closeDrawers));scrim?.addEventListener('click',closeDrawers);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawers();closeEditor();closeTour()}if(e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)){e.preventDefault();focusSearch()}});
 
+/* Search 2.0 */
+const search=$('#workspaceSearch'),results=$('#searchResults'),branchFilter=$('#branchFilter');let searchTimer;
+function focusSearch(){if(search){search.focus();search.select();location.hash='';}}
+$$('[data-search-focus]').forEach(b=>b.addEventListener('click',focusSearch));
+async function runSearch(){if(!search||!results)return;const q=search.value.trim(),branch=branchFilter?.value||'';if(!q&&!branch){results.classList.remove('open');return}try{const data=await fetch(`/api/search?q=${encodeURIComponent(q)}&branch=${encodeURIComponent(branch)}`).then(r=>r.json());results.innerHTML=data.length?data.slice(0,12).map(x=>`<a href="${esc(x.url)}"><span><strong>${esc(x.label)}</strong><small>${esc(x.kind||'workspace')}</small></span><b>›</b></a>`).join(''):`<button type="button" class="search-empty" data-search-atlas>No exact result. Ask Atlas about “${esc(q)}” →</button>`;results.classList.add('open');recordEvent('search',{query:q,branch,count:data.length});$('[data-search-atlas]')?.addEventListener('click',()=>{openDrawer($('#atlasDrawer'));askAtlas(`Help me find: ${q}`)})}catch{results.innerHTML='<div class="search-status">Search is temporarily unavailable.</div>';results.classList.add('open')}}
+search?.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,160)});branchFilter?.addEventListener('change',runSearch);document.addEventListener('click',e=>{if(results&&!e.target.closest('.hero-search'))results.classList.remove('open')});
 
-/* V8 prototype editing system */
-(function(){
- const toolbar=document.getElementById('editToolbar');
- const modal=document.getElementById('editorModal');
- const form=document.getElementById('editorForm');
- const close=document.getElementById('editorClose');
- const cancel=document.getElementById('editorCancel');
- const kindInput=document.getElementById('editorKind');
- const titleInput=document.getElementById('editorItemTitle');
- const urlInput=document.getElementById('editorUrl');
- const descInput=document.getElementById('editorDescription');
- const fileInput=document.getElementById('editorFile');
- const urlWrap=document.getElementById('editorUrlWrap');
- const fileWrap=document.getElementById('editorFileWrap');
- const modalTitle=document.getElementById('editorTitle');
- const storeKey='mclw-v8-local-edits';
+/* Favorites + recently viewed */
+function itemKey(i){return i.url}
+function favorites(){return readJSON(STORE.favorites,[])}
+function isFavorite(url){return favorites().some(x=>x.url===url)}
+function updateFavoriteButtons(){$$('[data-favorite]').forEach(b=>{const on=isFavorite(b.dataset.url);b.classList.toggle('active',on);b.textContent=on?'★ Favorited':'☆ Favorite';b.setAttribute('aria-pressed',on?'true':'false')})}
+function toggleFavorite(item){let list=favorites();if(list.some(x=>itemKey(x)===itemKey(item))){list=list.filter(x=>itemKey(x)!==itemKey(item));showToast('Removed from favorites')}else{list.unshift(item);list=list.slice(0,20);showToast('Added to My Workspace')}writeJSON(STORE.favorites,list);updateFavoriteButtons();renderMyWorkspace();recordEvent('favorite_toggle',{url:item.url})}
+$$('[data-favorite]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggleFavorite({title:b.dataset.title,url:b.dataset.url})}));
+function trackCurrent(){const candidates=$$('.track-view');const first=candidates[0];if(!first)return;const item={title:first.dataset.title||document.title,url:first.dataset.url||location.pathname+location.hash,at:new Date().toISOString()};let list=readJSON(STORE.recent,[]).filter(x=>x.url!==item.url);list.unshift(item);writeJSON(STORE.recent,list.slice(0,12));recordEvent('page_view',{url:item.url})}
+trackCurrent();updateFavoriteButtons();
+function renderMiniList(el,items,empty){if(!el)return;el.innerHTML=items.length?items.map(x=>`<a href="${esc(x.url)}"><span>${esc(x.title)}</span><b>›</b></a>`).join(''):`<div class="empty-state">${empty}</div>`}
+function renderMyWorkspace(){renderMiniList($('#favoritesList'),favorites(),'Favorite a branch, section, or workspace area to keep it here.');renderMiniList($('#recentList'),readJSON(STORE.recent,[]),'Browse the workspace and recent locations will appear here.')}
+$('#clearFavorites')?.addEventListener('click',()=>{writeJSON(STORE.favorites,[]);renderMyWorkspace();updateFavoriteButtons();showToast('Favorites cleared')});$('#clearRecent')?.addEventListener('click',()=>{writeJSON(STORE.recent,[]);renderMyWorkspace();showToast('Recent history cleared')});
 
- function load(){try{return JSON.parse(localStorage.getItem(storeKey)||'[]')}catch{return[]}}
- function save(items){localStorage.setItem(storeKey,JSON.stringify(items))}
- function openEditor(kind){
-   if(!modal)return;
-   kindInput.value=kind;form.reset();kindInput.value=kind;
-   modalTitle.textContent='Add '+kind.charAt(0).toUpperCase()+kind.slice(1);
-   urlWrap.style.display=kind==='link'?'grid':'none';
-   fileWrap.style.display=kind==='file'?'grid':'none';
-   modal.classList.add('open');modal.setAttribute('aria-hidden','false');titleInput.focus();
- }
- function closeEditor(){if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
- function render(){
-   document.querySelectorAll('.local-edit-item').forEach(x=>x.remove());
-   for(const item of load()){
-     let zone=document.querySelector(`[data-zone="${item.zone||'updates'}"]`)||document.querySelector('[data-zone="updates"]');
-     if(!zone)continue;
-     const el=document.createElement(item.kind==='link'?'a':'article');
-     el.className='local-edit-item';
-     if(item.kind==='link'&&item.url){el.href=item.url;el.target='_blank';el.rel='noopener'}
-     el.innerHTML=`<strong>${esc(item.title)}</strong>${item.description?`<small>${esc(item.description)}</small>`:''}${item.fileName?`<small>File: ${esc(item.fileName)}</small>`:''}<button type="button" class="local-edit-remove" data-remove-edit="${item.id}">Remove</button>`;
-     zone.appendChild(el);
-   }
-   document.querySelectorAll('[data-remove-edit]').forEach(b=>b.addEventListener('click',e=>{
-     e.preventDefault();e.stopPropagation();
-     save(load().filter(x=>x.id!==b.dataset.removeEdit));render();showToast('Demo item removed');
-   }));
- }
- document.querySelectorAll('[data-editor-add]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.editorAdd)));
- close?.addEventListener('click',closeEditor);cancel?.addEventListener('click',closeEditor);
- modal?.addEventListener('click',e=>{if(e.target===modal)closeEditor()});
- form?.addEventListener('submit',e=>{
-   e.preventDefault();
-   const kind=kindInput.value;
-   const item={
-     id:String(Date.now()),kind,
-     title:titleInput.value.trim(),
-     url:urlInput.value.trim(),
-     description:descInput.value.trim(),
-     fileName:fileInput.files?.[0]?.name||'',
-     zone:kind==='link'?'quick-links':kind==='update'?'updates':kind==='section'?'updates':kind==='folder'?'updates':kind==='file'?'updates':'updates'
-   };
-   if(!item.title)return;
-   const items=load();items.push(item);save(items);render();closeEditor();showToast(`${item.title} added to your local demo`);
- });
- document.querySelector('[data-editor-reset]')?.addEventListener('click',()=>{
-   if(confirm('Remove all prototype edits saved in this browser?')){localStorage.removeItem(storeKey);render();showToast('Local demo edits reset')}
- });
- document.querySelectorAll('[data-edit-card]').forEach(b=>b.addEventListener('click',e=>{
-   e.preventDefault();e.stopPropagation();
-   const card=b.closest('[data-editable-card]');
-   if(b.dataset.editCard==='title'){
-     const current=card.querySelector('h3').textContent;
-     const value=prompt('Demo branch label:',current);
-     if(value){card.querySelector('h3').textContent=value;showToast('Demo label updated for this session')}
-   }else{
-     showToast('Prototype image replacement is represented here; production would open a secured upload workflow.');
-   }
- }));
- render();
-})();
+/* Atlas */
+function renderAtlasMarkdown(text){let s=esc(text).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/__([^_\n]+)__/g,'<strong>$1</strong>').replace(/(^|[\s(])\*([^*\n]+)\*(?=$|[\s).,!?:;])/g,'$1<em>$2</em>').replace(/(^|[\s(])_([^_\n]+)_(?=$|[\s).,!?:;])/g,'$1<em>$2</em>');const lines=s.split(/\r?\n/);let html='',list='';const close=()=>{if(list){html+=`</${list}>`;list=''}};for(const raw of lines){const line=raw.trim();let m=line.match(/^[-•]\s+(.+)/);if(m){if(list!=='ul'){close();html+='<ul>';list='ul'}html+=`<li>${m[1]}</li>`;continue}m=line.match(/^\d+[.)]\s+(.+)/);if(m){if(list!=='ol'){close();html+='<ol>';list='ol'}html+=`<li>${m[1]}</li>`;continue}close();if(line)html+=`<p>${line}</p>`}close();return html||'<p></p>'}
+const atlasForm=$('#atlasForm'),atlasInput=$('#atlasInput'),thread=$('#atlasThread');let atlasHistory=[];try{atlasHistory=JSON.parse(sessionStorage.getItem(STORE.atlas)||'[]')}catch{}
+function saveAtlasHistory(){sessionStorage.setItem(STORE.atlas,JSON.stringify(atlasHistory.slice(-16)))}
+function atlasContext(){const parts=location.pathname.split('/').filter(Boolean);let txt='Countywide Staff Hub';if(parts[0]==='branch')txt=parts.slice(1).join(' › ').replaceAll('-',' ');$('#atlasContext')&&( $('#atlasContext').textContent='Current context: '+txt );return location.pathname+location.hash}
+atlasContext();
+function handleAtlasAction(a){if(a.type==='open_feedback'){closeDrawers();setTimeout(()=>openDrawer($('#feedbackDrawer')),120)}if(a.type==='enter_edit_mode'){editMode=true;localStorage.setItem(STORE.editMode,'1');applyEdit();showToast('Atlas enabled Edit Mode')}if(a.type==='open_my_workspace'){closeDrawers();setTimeout(()=>{renderMyWorkspace();openDrawer($('#myWorkspaceDrawer'))},120)}if(a.type==='focus_search'){closeDrawers();setTimeout(focusSearch,120)}}
+function atlasActionElement(a){if(a.type==='navigate'&&a.url){const el=document.createElement('a');el.href=a.url;el.textContent=a.label||'Open';return el}const el=document.createElement('button');el.type='button';el.textContent=a.label||'Run action';el.addEventListener('click',()=>handleAtlasAction(a));return el}
+async function askAtlas(q){if(!q||!thread)return;thread.insertAdjacentHTML('beforeend',`<div class="message user">${esc(q)}</div>`);atlasHistory.push({role:'user',text:q});saveAtlasHistory();if(atlasInput)atlasInput.value='';const loading=document.createElement('div');loading.className='message atlas thinking';loading.textContent='Thinking…';thread.appendChild(loading);thread.scrollTop=thread.scrollHeight;recordEvent('atlas_prompt',{length:q.length});try{const res=await fetch('/api/atlas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,history:atlasHistory.slice(0,-1),context:atlasContext()})});const data=await res.json();loading.remove();if(!res.ok||!data.ok)throw new Error(data.error||'Atlas is unavailable.');thread.insertAdjacentHTML('beforeend',`<div class="message atlas">${renderAtlasMarkdown(data.reply)}</div>`);atlasHistory.push({role:'model',text:data.reply});saveAtlasHistory();if(data.actions?.length){const wrap=document.createElement('div');wrap.className='atlas-actions';data.actions.forEach(a=>wrap.appendChild(atlasActionElement(a)));thread.appendChild(wrap)}}catch(e){loading.remove();thread.insertAdjacentHTML('beforeend',`<div class="message atlas"><p>Atlas is temporarily unavailable. ${esc(e.message)}</p></div>`)}thread.scrollTop=thread.scrollHeight}
+atlasForm?.addEventListener('submit',e=>{e.preventDefault();askAtlas(atlasInput.value.trim())});$$('[data-atlas-prompt]').forEach(b=>b.addEventListener('click',()=>askAtlas(b.dataset.atlasPrompt)));$('#clearAtlas')?.addEventListener('click',()=>{atlasHistory=[];sessionStorage.removeItem(STORE.atlas);thread.innerHTML='<div class="message atlas"><p>Conversation cleared. What can I help you find?</p></div>';showToast('Atlas conversation cleared')});
+
+/* Feedback */
+$$('input[name="identity"]').forEach(r=>r.addEventListener('change',()=>$('#feedbackNameWrap')?.classList.toggle('hidden',$('input[name="identity"]:checked')?.value!=='named')));$('#feedbackForm')?.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.currentTarget),p=Object.fromEntries(fd.entries());p.anonymous=p.identity!=='named';const status=$('#feedbackStatus');status.textContent='Saving…';try{const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});const data=await res.json();status.textContent=data.message||data.error;if(res.ok){showToast('Feedback saved. Thank you.');recordEvent('feedback_submit',{category:p.category});e.currentTarget.reset();$('#feedbackNameWrap')?.classList.add('hidden')}}catch{status.textContent='Unable to save feedback right now.'}});
+
+/* Staff Board 2.0 */
+function renderLocalPosts(){const feed=$('#boardFeed');if(!feed)return;$$('.local-board-post',feed).forEach(x=>x.remove());for(const p of readJSON(STORE.board,[])){feed.insertAdjacentHTML('beforeend',`<article class="board-post local-board-post" data-category="${esc(p.category)}" data-branch="${esc(p.branch)}"><div class="post-meta"><strong>${esc(p.name||'Demo staff member')}</strong><span>${esc(p.branch)} · Local demo</span></div><span class="post-category">${esc(p.category)}</span><p>${esc(p.body)}</p><div class="post-actions"><button type="button" data-demo-react>♡ Useful</button></div></article>`)}bindReactions();filterBoard()}
+$('#boardPostButton')?.addEventListener('click',()=>{const name=$('#boardName')?.value.trim(),bodyText=$('#boardMessage')?.value.trim(),branch=$('#boardBranch')?.value||'Maui County',category=$('#boardCategory')?.value||'Idea';if(!bodyText)return showToast('Write a short post first.');const posts=readJSON(STORE.board,[]);posts.push({name:name||'Demo staff member',body:bodyText,branch,category,at:new Date().toISOString()});writeJSON(STORE.board,posts.slice(-40));$('#boardMessage').value='';renderLocalPosts();showToast('Added to your local demo board');recordEvent('board_post',{branch,category})});
+let boardCategory='all';function filterBoard(){$$('#boardFeed .board-post').forEach(p=>{const branch=$('#boardBranchFilter')?.value||'all';p.hidden=!((boardCategory==='all'||p.dataset.category===boardCategory)&&(branch==='all'||p.dataset.branch===branch))})}
+$$('[data-board-category]').forEach(b=>b.addEventListener('click',()=>{$$('[data-board-category]').forEach(x=>x.classList.remove('active'));b.classList.add('active');boardCategory=b.dataset.boardCategory;filterBoard()}));$('#boardBranchFilter')?.addEventListener('change',filterBoard);function bindReactions(){$$('[data-demo-react]').forEach(b=>{if(b.dataset.bound)return;b.dataset.bound='1';b.addEventListener('click',()=>{b.classList.toggle('active');b.textContent=b.classList.contains('active')?'♥ Useful':'♡ Useful'})})}renderLocalPosts();bindReactions();
+$$('[data-activity-filter]').forEach(b=>b.addEventListener('click',()=>{$$('[data-activity-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const f=b.dataset.activityFilter;$$('#activityFeed [data-category]').forEach(i=>i.hidden=!(f==='all'||i.dataset.category===f))}));
+
+/* Edit Mode */
+let editMode=localStorage.getItem(STORE.editMode)==='1';function applyEdit(){body.classList.toggle('edit-mode',editMode);$$('[data-edit-toggle]').forEach(b=>b.textContent=editMode?'✓ Done Editing':'✎ Edit Workspace');$('#editToolbar')?.setAttribute('aria-hidden',editMode?'false':'true')};applyEdit();$$('[data-edit-toggle]').forEach(b=>b.addEventListener('click',()=>{editMode=!editMode;localStorage.setItem(STORE.editMode,editMode?'1':'0');applyEdit();showToast(editMode?'Edit Mode enabled — local prototype changes only':'Edit Mode closed')}));
+const modal=$('#editorModal'),form=$('#editorForm');function closeEditor(){modal?.classList.remove('open');modal?.setAttribute('aria-hidden','true')}
+function openEditor(kind){if(!modal||!form)return;form.reset();$('#editorKind').value=kind;$('#editorTitle').textContent='Add '+kind.charAt(0).toUpperCase()+kind.slice(1);$('#editorUrlWrap').style.display=kind==='link'?'grid':'none';$('#editorFileWrap').style.display=kind==='file'?'grid':'none';modal.classList.add('open');modal.setAttribute('aria-hidden','false');$('#editorItemTitle').focus()}
+$$('[data-editor-add]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.editorAdd)));$$('[data-demo-add]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.demoAdd||'resource')));$('#editorClose')?.addEventListener('click',closeEditor);$('#editorCancel')?.addEventListener('click',closeEditor);
+function renderLocalEdits(){$$('.local-edit-item').forEach(x=>x.remove());for(const item of readJSON(STORE.edits,[])){const zone=$(`[data-zone="${item.zone}"]`)||$('[data-zone="updates"]');if(!zone)continue;const el=document.createElement(item.kind==='link'?'a':'article');el.className='local-edit-item';if(item.kind==='link'&&item.url){el.href=item.url;el.target='_blank';el.rel='noopener noreferrer'}el.innerHTML=`<strong>${esc(item.title)}</strong>${item.description?`<small>${esc(item.description)}</small>`:''}<button class="local-edit-remove" type="button" data-remove-edit="${item.id}">Remove</button>`;zone.appendChild(el)}$$('[data-remove-edit]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const items=readJSON(STORE.edits,[]).filter(x=>String(x.id)!==b.dataset.removeEdit);writeJSON(STORE.edits,items);renderLocalEdits();showToast('Local demo item removed')}))}
+form?.addEventListener('submit',e=>{e.preventDefault();const kind=$('#editorKind').value,title=$('#editorItemTitle').value.trim(),url=$('#editorUrl').value.trim(),description=$('#editorDescription').value.trim();if(!title)return;const zone=kind==='link'?'quick-links':'updates';const items=readJSON(STORE.edits,[]);items.push({id:Date.now(),kind,title,url,description,zone,path:location.pathname});writeJSON(STORE.edits,items);closeEditor();renderLocalEdits();showToast('Saved to this browser only')});$('[data-editor-reset]')?.addEventListener('click',()=>{localStorage.removeItem(STORE.edits);renderLocalEdits();showToast('Local edits reset')});renderLocalEdits();
+
+/* Onboarding */
+const tour=$('#onboardingTour'),tourText=$('#tourText'),tourProgress=$('#tourProgress');const tourSteps=['This prototype demonstrates one consistent staff workspace across eight Maui County libraries.','Every branch uses four shared core areas: Management, Operations, Services, and Communications.','Atlas is embedded workspace intelligence. It can navigate, explain structure, search with you, and open safe prototype tools.','My Workspace keeps favorites and recent locations on this device. Edit Mode and Staff Board interactions are also browser-local.','Production authentication, permanent storage, approved internal content, and Microsoft integration intentionally wait for organizational adoption.'];let tourIndex=0;
+function renderTour(){if(!tour)return;tourText.textContent=tourSteps[tourIndex];tourProgress.innerHTML=tourSteps.map((_,i)=>`<span class="${i===tourIndex?'active':''}"></span>`).join('');$('#tourBack').disabled=tourIndex===0;$('#tourNext').textContent=tourIndex===tourSteps.length-1?'Explore workspace':'Next'}
+function openTour(){if(!tour)return;tourIndex=0;renderTour();tour.classList.add('open');tour.setAttribute('aria-hidden','false')}
+function closeTour(){tour?.classList.remove('open');tour?.setAttribute('aria-hidden','true');localStorage.setItem(STORE.tour,'1')}
+$('#startTour')?.addEventListener('click',openTour);$('.tour-close')?.addEventListener('click',closeTour);$('#tourBack')?.addEventListener('click',()=>{tourIndex=Math.max(0,tourIndex-1);renderTour()});$('#tourNext')?.addEventListener('click',()=>{if(tourIndex===tourSteps.length-1)return closeTour();tourIndex++;renderTour()});if(body.dataset.page==='home'&&!localStorage.getItem(STORE.tour))setTimeout(openTour,650);
+
+/* PWA */
+if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js').catch(()=>{}))}
+window.addEventListener('offline',()=>showToast('You are offline. Cached prototype pages remain available.'));window.addEventListener('online',()=>showToast('Back online.'));

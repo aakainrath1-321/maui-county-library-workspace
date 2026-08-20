@@ -1,7 +1,7 @@
 import os, sqlite3, json, re, time
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, abort
+from flask import Flask, render_template, request, jsonify, abort, Response
 
 BASE_DIR=Path(__file__).resolve().parent
 DB_PATH=Path(os.environ.get('WORKSPACE_DB_PATH', BASE_DIR/'workspace.db'))
@@ -42,6 +42,8 @@ When useful, propose safe UI actions at the very end of your response using one 
 [[ACTION:{"type":"navigate","label":"Open Wailuku Policies","url":"/branch/wailuku/operations#policies-procedures"}]]
 [[ACTION:{"type":"open_feedback","label":"Open feedback"}]]
 [[ACTION:{"type":"enter_edit_mode","label":"Enter Edit Mode"}]]
+[[ACTION:{"type":"open_my_workspace","label":"Open My Workspace"}]]
+[[ACTION:{"type":"focus_search","label":"Search workspace"}]]
 
 Do not explain the action syntax to the user.
 Only use routes that exist in the prototype.
@@ -54,7 +56,7 @@ CONVERSATION
 """
 
 def atlas_workspace_context(current_path):
-    path = current_path or "/"
+    path = (current_path or "/").split("#",1)[0].split("?",1)[0]
     context = {"path": path, "branch": None, "section": None}
     parts = [p for p in path.split("/") if p]
     if len(parts) >= 2 and parts[0] == "branch":
@@ -73,7 +75,7 @@ def parse_atlas_actions(text):
     for raw in pattern.findall(text or ""):
         try:
             action = json.loads(raw)
-            if action.get("type") in {"navigate", "open_feedback", "enter_edit_mode"}:
+            if action.get("type") in {"navigate", "open_feedback", "enter_edit_mode", "open_my_workspace", "focus_search"}:
                 actions.append(action)
         except Exception:
             pass
@@ -168,13 +170,25 @@ def section(branch_slug,section_slug):
 @app.get('/api/search')
 def search():
  q=(request.args.get('q') or '').strip().lower()
- if not q: return jsonify([])
- terms=[t for t in q.split() if t]; scored=[]
+ branch=(request.args.get('branch') or '').strip().lower()
+ terms=[t for t in q.split() if t]
+ scored=[]
  for item in SEARCH_INDEX:
-  hay=(item['label']+' '+item['keywords']).lower(); score=sum(3 if t in item['label'].lower() else 1 for t in terms if t in hay)
-  if score: scored.append((score,item))
+  if branch and f"/branch/{branch}" not in item['url']:
+   continue
+  hay=(item['label']+' '+item['keywords']).lower()
+  if not terms:
+   score=1
+  else:
+   score=sum(4 if t in item['label'].lower() else 1 for t in terms if t in hay)
+  if score:
+   out=dict(item)
+   parts=[p for p in item['url'].split('/') if p]
+   out['kind']='branch' if len(parts)==2 else ('section' if len(parts)==3 and '#' not in item['url'] else 'area')
+   out['branch_slug']=parts[1] if len(parts)>=2 and parts[0]=='branch' else ''
+   scored.append((score,out))
  scored.sort(key=lambda x:(-x[0],x[1]['label']))
- return jsonify([i for _,i in scored[:10]])
+ return jsonify([i for _,i in scored[:20]])
 @app.post('/api/feedback')
 def feedback():
  d=request.get_json(silent=True) or request.form; anonymous=str(d.get('anonymous','true')).lower() in {'true','1','yes','on'}
@@ -299,5 +313,38 @@ def atlas_health():
             status["gemini_live_test"] = "error: " + str(exc)
 
     return jsonify(status)
+
+
+@app.get('/manifest.webmanifest')
+def manifest():
+    payload = {
+        "name":"Maui County Library Workspace Prototype",
+        "short_name":"Maui Workspace",
+        "start_url":"/",
+        "scope":"/",
+        "display":"standalone",
+        "background_color":"#f7f4ef",
+        "theme_color":"#173f50",
+        "description":"Public prototype for a shared Maui County library staff workspace.",
+        "icons":[{"src":"/static/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+    }
+    return Response(json.dumps(payload), mimetype='application/manifest+json')
+
+@app.get('/service-worker.js')
+def service_worker():
+    js = '''const CACHE="mclw-master-v1";const CORE=["/","/prototype","/offline","/static/css/app.css","/static/js/app.js","/static/favicon.svg","/static/assets/master-mark.svg","/static/assets/branch-fallback.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("/offline"))))});'''
+    return Response(js, mimetype='application/javascript', headers={'Service-Worker-Allowed':'/'})
+
+@app.get('/offline')
+def offline():
+    return render_template('offline.html')
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('error.html', code=404, title='Page not found', message='That workspace location does not exist in this prototype.'), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return render_template('error.html', code=500, title='Something went wrong', message='The prototype hit an unexpected error. Return to the Staff Hub and try again.'), 500
 
 if __name__=='__main__': app.run(debug=os.environ.get('FLASK_DEBUG')=='1')
