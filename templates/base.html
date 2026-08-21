@@ -10,6 +10,10 @@
   <title>{% block title %}Maui County Library Workspace Prototype{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static',filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="preload"
+      href="{{ url_for('static', filename='assets/hero-maui-sunset.jpg') }}"
+      as="image"
+      fetchpriority="high">
   <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css', v='maui-reskin-final-1') }}">
 </head>
 <body data-page="{% block page_id %}page{% endblock %}">
