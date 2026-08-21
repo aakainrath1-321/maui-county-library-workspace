@@ -624,3 +624,51 @@ html{scroll-behavior:smooth}body{background:linear-gradient(180deg,#fbfaf7 0%,#f
 
 /* Master branch identity assets */
 .branch-card-logo{width:54px;height:38px;object-fit:contain;object-position:left center;flex:0 0 auto}.dashboard-library-card-body{gap:10px}.dashboard-library-card-body>div{min-width:0;flex:1}.branch-page-logo{display:block;width:min(360px,85%);height:70px;object-fit:contain;object-position:left center;margin:0 0 16px}.snapshot-hspls img{max-width:190px;height:auto;object-fit:contain}@media(max-width:560px){.branch-card-logo{width:44px;height:32px}.branch-page-logo{height:56px}}
+
+/* === Live-layout Maui reskin: visual assets only === */
+.master-hero-bg{
+  background-image:
+    linear-gradient(90deg,rgba(247,251,250,.95) 0%,rgba(247,251,250,.86) 31%,rgba(247,251,250,.50) 53%,rgba(247,251,250,.18) 72%,rgba(247,251,250,.08) 100%),
+    linear-gradient(180deg,rgba(255,248,238,.12),rgba(22,61,78,.10)),
+    url('../assets/hero-maui-sunset.jpg') !important;
+  background-size:cover !important;
+  background-position:center 55% !important;
+  background-repeat:no-repeat !important;
+}
+.master-hero-bg:after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 58%,rgba(27,65,78,.08)) !important;
+  background-image:none !important;
+  mask-image:none !important;
+  pointer-events:none;
+}
+.master-hero .island-line{display:none !important}
+.master-emblem-card>img{width:145px;height:145px;object-fit:contain}
+.wordmark img{object-fit:contain}
+@media(max-width:780px){
+  .master-hero-bg{background-position:62% center !important}
+  .master-hero-inner{background:linear-gradient(90deg,rgba(247,251,250,.90),rgba(247,251,250,.52))}
+}
+
+/* FINAL BRANCH IMAGE FRAME FIX — branch hero photos must fill their frame */
+.branch-image-wrap.branch-cover{
+  position:relative;
+  min-height:460px;
+  background:var(--ocean-soft);
+}
+.branch-image-wrap.branch-cover>img{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  display:block;
+  z-index:1;
+}
+@media(max-width:780px){
+  .branch-image-wrap.branch-cover{min-height:300px}
+}
