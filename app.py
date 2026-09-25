@@ -114,6 +114,58 @@ SECTIONS=[
    {'slug':'marketing','name':'Marketing','children':[{'slug':'newsletters','name':'Newsletters'},{'slug':'flyers-posters','name':'Flyers & Posters'}]},
    {'slug':'website-updates','name':'Website Updates'},]},
 ]
+
+# Wailuku uses its finalized branch-specific OneDrive information architecture.
+# Other branches continue to use the original countywide four-area prototype structure.
+WAILUKU_SECTIONS=[
+ {'slug':'staff','name':'Staff','description':'Staff information, scheduling, onboarding, training, meetings, performance, and student helper or volunteer support.','items':[
+   {'slug':'staff-information','name':'Staff Information','children':[{'slug':'directory-contacts','name':'Directory & Contacts'},{'slug':'roles-responsibilities','name':'Roles & Responsibilities'}]},
+   {'slug':'scheduling-coverage','name':'Scheduling & Coverage','children':[{'slug':'staff-schedules','name':'Staff Schedules'},{'slug':'leave-absences','name':'Leave & Absences'},{'slug':'coverage','name':'Coverage'}]},
+   {'slug':'onboarding-offboarding','name':'Onboarding & Offboarding'}, {'slug':'training-professional-development','name':'Training & Professional Development'},
+   {'slug':'staff-meetings','name':'Staff Meetings','children':[{'slug':'agendas','name':'Agendas'},{'slug':'minutes-notes','name':'Minutes & Notes'}]},
+   {'slug':'performance-development','name':'Performance & Development'}, {'slug':'student-helpers-volunteers','name':'Student Helpers & Volunteers'}]},
+ {'slug':'patron-services','name':'Patron Services','description':'Circulation, accounts, requests, reference, digital services, public technology, accessibility, and public-space use.','items':[
+   {'slug':'circulation','name':'Circulation','children':[{'slug':'checkouts-returns-renewals','name':'Checkout, Return & Renewal'},{'slug':'holds','name':'Holds'},{'slug':'lost-damaged-items','name':'Lost & Damaged Items'},{'slug':'fines-fees','name':'Fines & Fees'}]},
+   {'slug':'patron-accounts','name':'Patron Accounts'},{'slug':'requests-interlibrary-services','name':'Requests & Interlibrary Services'},{'slug':'reference-information','name':'Reference & Information'},{'slug':'digital-library-services','name':'Digital Library Services'},{'slug':'public-computers-internet','name':'Public Computers & Internet'},{'slug':'printing-copying-scanning','name':'Printing, Copying & Scanning'},{'slug':'accessibility-services','name':'Accessibility Services'},{'slug':'public-spaces-room-use','name':'Public Spaces & Room Use'}]},
+ {'slug':'collections','name':'Collections','description':'Collection development and ordering, receiving and processing, maintenance, inventory, and donations for Wailuku and Bookmobile collections.','items':[
+   {'slug':'collection-development-ordering','name':'Collection Development & Ordering','resource_name':'Order Lists','children':[{'slug':'wailuku-orders','name':'Wailuku','children':[{'slug':'adult-orders','name':'Adult'},{'slug':'young-adult-orders','name':'Young Adult'},{'slug':'juvenile-orders','name':'Juvenile'},{'slug':'audiovisual-other-orders','name':'Audiovisual & Other Formats'}]},{'slug':'bookmobile-orders','name':'Bookmobile','children':[{'slug':'bookmobile-adult-orders','name':'Adult'},{'slug':'bookmobile-young-adult-orders','name':'Young Adult'},{'slug':'bookmobile-juvenile-orders','name':'Juvenile'},{'slug':'bookmobile-audiovisual-other-orders','name':'Audiovisual & Other Formats'}]}]},
+   {'slug':'receiving-processing','name':'Receiving & Processing','children':[{'slug':'wailuku-receiving','name':'Wailuku'},{'slug':'bookmobile-receiving','name':'Bookmobile'}]},
+   {'slug':'collection-maintenance','name':'Collection Maintenance','children':[{'slug':'inventory','name':'Inventory'},{'slug':'weeding-withdrawal','name':'Weeding & Withdrawal'},{'slug':'repair-replacement','name':'Repair & Replacement'},{'slug':'shelf-maintenance','name':'Shelf Maintenance'}]},
+   {'slug':'donations','name':'Donations','resource_name':'Donations & Honorbacks'}]},
+ {'slug':'programs-outreach','name':'Programs & Outreach','description':'Programs by audience, outreach activity, branch-wide program planning, displays, and exhibits.','items':[
+   {'slug':'childrens-programs','name':"Children's Programs"},{'slug':'teen-programs','name':'Teen Programs'},{'slug':'adult-programs','name':'Adult Programs'},{'slug':'family-all-ages-programs','name':'Family & All-Ages Programs'},
+   {'slug':'outreach','name':'Outreach','children':[{'slug':'schools','name':'Schools'},{'slug':'community-organizations','name':'Community Organizations'},{'slug':'community-events','name':'Community Events'},{'slug':'outreach-planning','name':'Outreach Planning','resource_name':'Planning Resources'}]},
+   {'slug':'program-planning','name':'Program Planning'},{'slug':'displays-exhibits','name':'Displays & Exhibits'}]},
+ {'slug':'bookmobile','name':'Bookmobile','description':'Bookmobile-specific service schedules, stops, vehicle records, inspections, maintenance, fuel, and mileage.','items':[
+   {'slug':'service-schedule-stops','name':'Service Schedule & Stops'},
+   {'slug':'vehicle-operations','name':'Vehicle Operations','children':[{'slug':'vehicle-records','name':'Vehicle Records'},{'slug':'inspections-readiness','name':'Inspections & Readiness','resource_path':['Vehicle Operations','Vehicle Records','Inspections']},{'slug':'maintenance-repairs','name':'Maintenance & Repairs','resource_path':['Vehicle Operations','Vehicle Records','Maintenance & Repairs']},{'slug':'fuel-mileage','name':'Fuel & Mileage','resource_path':['Vehicle Operations','Vehicle Records','Fuel & Mileage']}]}]},
+ {'slug':'facilities','name':'Facilities','description':'Building information, maintenance and repairs, janitorial operations, grounds, furniture and equipment, access, and inspections.','items':[
+   {'slug':'building-information-spaces','name':'Building Information & Spaces','children':[{'slug':'building-information','name':'Building Information'},{'slug':'floor-plans','name':'Floor Plans','resource_name':'Floor Plans & Layout'},{'slug':'space-information','name':'Space Information'}]},
+   {'slug':'maintenance-repairs','name':'Maintenance & Repairs','children':[{'slug':'maintenance-requests','name':'Maintenance Requests'},{'slug':'service-repair-records','name':'Service & Repair Records'}]},
+   {'slug':'janitorial','name':'Janitorial','children':[{'slug':'cleaning-schedules','name':'Cleaning Schedules','resource_name':'Cleaning Schedule & Procedures'},{'slug':'cleaning-procedures','name':'Cleaning Procedures','resource_name':'Cleaning Schedule & Procedures'},{'slug':'janitorial-equipment','name':'Janitorial Equipment','resource_name':'Janitorial Equipment & Supplies'}]},
+   {'slug':'grounds-exterior','name':'Grounds & Exterior'},{'slug':'furniture-equipment','name':'Furniture & Equipment'},{'slug':'keys-building-access','name':'Keys & Building Access','resource_path':['Building Information & Spaces','Keys & Building Access']},{'slug':'facility-inspections','name':'Facility Inspections'}]},
+ {'slug':'technology','name':'Technology','description':'Branch computers and devices, printing equipment, network, phones, audiovisual equipment, systems, inventory, and technical support.','items':[
+   {'slug':'computers-devices','name':'Computers & Devices','children':[{'slug':'staff-devices','name':'Staff'},{'slug':'public-devices','name':'Public'}]}, {'slug':'printers-copiers-scanners','name':'Printers, Copiers & Scanners','resource_name':'Printers, Copiers, Scanners'},{'slug':'network-wifi','name':'Network & Wi-Fi','resource_name':'Network & Wifi'},{'slug':'phones','name':'Phones'},{'slug':'audiovisual-equipment','name':'Audiovisual Equipment'},{'slug':'library-systems-software','name':'Library Systems & Software'},{'slug':'technology-inventory','name':'Technology Inventory'},{'slug':'technology-support','name':'Technology Support','resource_name':'Tech Support'}]},
+ {'slug':'safety-security','name':'Safety & Security','description':'Emergency preparedness, security procedures, patron behavior, incident reporting, workplace safety, and emergency equipment.','items':[
+   {'slug':'emergency-preparedness','name':'Emergency Preparedness','children':[{'slug':'emergency-contacts','name':'Emergency Contacts'},{'slug':'emergency-procedures','name':'Emergency Procedures','children':[{'slug':'evacuation','name':'Evacuation'},{'slug':'disaster-response','name':'Disaster Response'}]}]},
+   {'slug':'security-procedures','name':'Security Procedures','resource_path':['Emergency Preparedness','Security Procedures']},
+   {'slug':'patron-behavior','name':'Patron Behavior','resource_path':['Emergency Preparedness','Patron Behavior']},
+   {'slug':'incident-reports','name':'Incident Reports','resource_path':['Emergency Preparedness','Patron Behavior','Incident Reports']},
+   {'slug':'workplace-safety','name':'Workplace Safety','resource_path':['Emergency Preparedness','Workplace Safety']},
+   {'slug':'safety-emergency-equipment','name':'Safety & Emergency Equipment','resource_path':['Emergency Preparedness','Workplace Safety','Safety & Emergency Equipment']}]},
+ {'slug':'finance-purchasing','name':'Finance & Purchasing','description':'Budget planning, expenditure tracking, purchasing, cash and deposits, and financial reporting.','items':[
+   {'slug':'budget','name':'Budget','children':[{'slug':'budget-planning','name':'Budget Planning'},{'slug':'expenditure-tracking','name':'Expenditure Tracking'}]},
+   {'slug':'purchasing','name':'Purchasing','children':[{'slug':'supply-lists','name':'Supply Lists','resource_name':'Purchase Orders & Supply Lists'},{'slug':'purchase-requests','name':'Purchase Requests'},{'slug':'purchase-orders','name':'Purchase Orders','resource_name':'Purchase Orders & Supply Lists'},{'slug':'invoices-receipts','name':'Invoices & Receipts','resource_path':['Purchase Orders & Supply Lists','Invoices & Receipts']}]},
+   {'slug':'cash-deposits','name':'Cash & Deposits'},{'slug':'financial-reports','name':'Financial Reports','resource_path':['Budget','Budget Planning','Financial Reports']}]},
+ {'slug':'branch-management','name':'Branch Management','description':'Daily branch operations, deadlines, goals and planning, statistics, policies, correspondence, records management, assessments, and surveys.','items':[
+   {'slug':'daily-branch-operations','name':'Daily Branch Operations','resource_name':'Daily Operations','children':[{'slug':'opening','name':'Opening'},{'slug':'closing','name':'Closing'}]}, {'slug':'branch-calendar-deadlines','name':'Branch Calendar & Deadlines'},
+   {'slug':'goals-planning','name':'Goals & Planning','children':[{'slug':'branch-goals','name':'Branch Goals'},{'slug':'strategic-planning','name':'Strategic Planning'},{'slug':'service-planning','name':'Service Planning'}]},
+   {'slug':'branch-statistics-reports','name':'Branch Statistics & Reports','children':[{'slug':'monthly-statistics','name':'Monthly Statistics'},{'slug':'annual-statistics','name':'Annual Statistics'},{'slug':'branch-reports','name':'Branch Reports'}]},
+   {'slug':'policies','name':'Policies'},{'slug':'official-correspondence','name':'Official Correspondence'},{'slug':'records-management','name':'Records Management'},{'slug':'assessments-surveys','name':'Assessments & Surveys'}]},
+ {'slug':'communications','name':'Communications','description':'Newsletters, flyers and posters, website materials, public announcements, media and publicity, branding, photos, and media.','items':[
+   {'slug':'newsletters','name':'Newsletters'},{'slug':'flyers-posters','name':'Flyers & Posters'},{'slug':'website','name':'Website'},{'slug':'public-announcements','name':'Public Announcements'},{'slug':'media-publicity','name':'Media & Publicity'},{'slug':'branding-logos','name':'Branding & Logos'},{'slug':'photos-media','name':'Photos & Media','resource_name':'Photos & Videos'}]},
+]
+
 QUICK_LINKS=[
  {'label':'HSPLS Website','url':'https://www.librarieshawaii.org/','type':'Public website'},
  {'label':'Branch Directory','url':'https://www.librarieshawaii.org/branch/','type':'Library pages'},
@@ -132,13 +184,104 @@ def init_db():
 init_db()
 
 def get_branch(slug): return next((b for b in BRANCHES if b['slug']==slug),None)
-def get_section(slug): return next((s for s in SECTIONS if s['slug']==slug),None)
+def get_section(slug, branch_slug=None):
+ sections = WAILUKU_SECTIONS if branch_slug == 'wailuku' else SECTIONS
+ return next((s for s in sections if s['slug']==slug),None)
+
+WAILUKU_FILES_ROOT = BASE_DIR / 'static' / 'wailuku-files'
+
+def build_wailuku_file_tree(section_name):
+ """Return the packaged Wailuku resource files for one branch section."""
+ section_root = WAILUKU_FILES_ROOT / section_name
+ if not section_root.exists() or not section_root.is_dir():
+  return []
+
+ def walk(folder):
+  entries=[]
+  for child in sorted(folder.iterdir(), key=lambda x: (x.is_file(), x.name.lower())):
+   if child.is_dir():
+    descendants=walk(child)
+    # OneDrive contains many intentional empty placeholders (months, pay periods, etc.).
+    # They belong in the source-of-truth architecture, but should not become visible
+    # website content until an actual resource exists inside them.
+    if descendants:
+     entries.append({'type':'folder','name':child.name,'children':descendants})
+   elif child.is_file():
+    rel=child.relative_to(BASE_DIR/'static').as_posix()
+    entry={'type':'file','name':child.name,'path':rel,'ext':child.suffix.lower().lstrip('.') or 'file'}
+    if child.suffix.lower() == '.url':
+     try:
+      for line in child.read_text(errors='ignore').splitlines():
+       if line.upper().startswith('URL='):
+        entry['external_url']=line.split('=',1)[1].strip()
+        entry['ext']='LINK'
+        entry['name']=child.stem
+        break
+     except OSError:
+      pass
+    entries.append(entry)
+  return entries
+ return walk(section_root)
+
+def _resource_folder(entries, name):
+ return next((r for r in entries if r.get('type') == 'folder' and r.get('name') == name), None)
+
+def _resource_path(entries, path):
+ current_entries = entries
+ folder = None
+ for part in path:
+  folder = _resource_folder(current_entries, part)
+  if not folder:
+   return None
+  current_entries = folder.get('children', [])
+ return folder
+
+def merge_wailuku_resources(items, resources, root_resources=None):
+ """Attach authoritative Wailuku files to their functional UI nodes without duplicating empty OneDrive scaffolding."""
+ root_resources = resources if root_resources is None else root_resources
+ loose_files=[r for r in resources if r['type']=='file']
+ merged=[]
+ for item in items:
+  node=dict(item)
+  if item.get('resource_path'):
+   folder=_resource_path(root_resources, item['resource_path'])
+  else:
+   folder=_resource_folder(resources, item.get('resource_name', item['name']))
+  folder_entries=folder.get('children',[]) if folder else []
+  child_items=item.get('children',[])
+  if child_items:
+   node['children']=merge_wailuku_resources(child_items, folder_entries, root_resources)
+  node['files']=[r for r in folder_entries if r['type']=='file']
+  # Deeper folders are shown only when they contain real resources and are not already
+  # represented by an explicit functional child in the interface.
+  represented={c.get('resource_name', c['name']) for c in child_items if not c.get('resource_path')}
+  node['resource_folders']=[r for r in folder_entries if r['type']=='folder' and r['name'] not in represented]
+  merged.append(node)
+ # Section-level files are rare; keep them visible rather than silently dropping them.
+ if loose_files and merged:
+  merged[0].setdefault('files',[]).extend(loose_files)
+ return merged
+
+def visible_wailuku_items(items):
+ """Keep only UI nodes that lead to an actual resource; preserve OneDrive scaffolding in data, not on screen."""
+ visible=[]
+ for item in items:
+  node=dict(item)
+  children=visible_wailuku_items(node.get('children',[]))
+  if children:
+   node['children']=children
+  else:
+   node['children']=[]
+  if node.get('files') or node.get('resource_folders') or children:
+   visible.append(node)
+ return visible
 
 def flatten_nodes():
  nodes=[]
  for b in BRANCHES:
+  branch_sections = WAILUKU_SECTIONS if b['slug']=='wailuku' else SECTIONS
   nodes.append({'label':b['name'],'url':f"/branch/{b['slug']}",'keywords':f"{b['name']} branch library {b['island']}"})
-  for s in SECTIONS:
+  for s in branch_sections:
    nodes.append({'label':f"{b['name']} — {s['name']}",'url':f"/branch/{b['slug']}/{s['slug']}",'keywords':f"{b['name']} {s['name']} {s['description']}"})
    def walk(items,trail):
     for item in items:
@@ -146,6 +289,15 @@ def flatten_nodes():
      nodes.append({'label':f"{b['name']} — {label}",'url':f"/branch/{b['slug']}/{s['slug']}#{item['slug']}",'keywords':f"{b['name']} {label}"})
      walk(item.get('children',[]),trail+[item['name']])
    walk(s['items'],[s['name']])
+   if b['slug'] == 'wailuku':
+    def index_resources(entries, trail):
+     for entry in entries:
+      if entry['type'] == 'folder':
+       index_resources(entry.get('children', []), trail + [entry['name']])
+      else:
+       label=' › '.join(trail + [entry['name']])
+       nodes.append({'label':f"{b['name']} — {label}",'url':f"/branch/{b['slug']}/{s['slug']}",'keywords':f"{b['name']} {label} file document resource"})
+    index_resources(build_wailuku_file_tree(s['name']), [s['name']])
  return nodes
 SEARCH_INDEX=flatten_nodes()
 
@@ -161,11 +313,17 @@ def authentication(): return render_template('authentication.html')
 def branch(branch_slug):
  b=get_branch(branch_slug)
  if not b: abort(404)
- return render_template('branch.html',branch=b)
+ branch_sections = WAILUKU_SECTIONS if branch_slug == 'wailuku' else SECTIONS
+ return render_template('branch.html',branch=b,branch_sections=branch_sections)
 @app.get('/branch/<branch_slug>/<section_slug>')
 def section(branch_slug,section_slug):
- b,s=get_branch(branch_slug),get_section(section_slug)
+ b,s=get_branch(branch_slug),get_section(section_slug, branch_slug)
  if not b or not s: abort(404)
+ if branch_slug == 'wailuku':
+  resources = build_wailuku_file_tree(s['name'])
+  s = dict(s)
+  s['items'] = merge_wailuku_resources(s['items'], resources)
+  s['visible_items'] = visible_wailuku_items(s['items'])
  return render_template('section.html',branch=b,section=s)
 @app.get('/api/search')
 def search():
@@ -332,7 +490,7 @@ def manifest():
 
 @app.get('/service-worker.js')
 def service_worker():
-    js = '''const CACHE="mclw-master-v1";const CORE=["/","/prototype","/offline","/static/css/app.css","/static/js/app.js","/static/favicon.svg","/static/assets/master-mark.svg","/static/assets/branch-fallback.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("/offline"))))});'''
+    js = '''const CACHE="mclw-master-v2-wailuku";const CORE=["/","/prototype","/offline","/static/css/app.css","/static/js/app.js","/static/favicon.svg","/static/assets/master-mark.svg","/static/assets/branch-fallback.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("/offline"))))});'''
     return Response(js, mimetype='application/javascript', headers={'Service-Worker-Allowed':'/'})
 
 @app.get('/offline')

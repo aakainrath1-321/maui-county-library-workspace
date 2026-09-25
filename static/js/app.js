@@ -19,10 +19,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawers();clos
 
 /* Search 2.0 */
 const search=$('#workspaceSearch'),results=$('#searchResults'),branchFilter=$('#branchFilter');let searchTimer;
-function focusSearch(){if(search){search.focus();search.select();location.hash='';}}
+function focusSearch(){if(search){search.focus();search.select();location.hash='';return;}window.location.href='/?focus=search';}
 $$('[data-search-focus]').forEach(b=>b.addEventListener('click',focusSearch));
 async function runSearch(){if(!search||!results)return;const q=search.value.trim(),branch=branchFilter?.value||'';if(!q&&!branch){results.classList.remove('open');return}try{const data=await fetch(`/api/search?q=${encodeURIComponent(q)}&branch=${encodeURIComponent(branch)}`).then(r=>r.json());results.innerHTML=data.length?data.slice(0,12).map(x=>`<a href="${esc(x.url)}"><span><strong>${esc(x.label)}</strong><small>${esc(x.kind||'workspace')}</small></span><b>›</b></a>`).join(''):`<button type="button" class="search-empty" data-search-atlas>No exact result. Ask Atlas about “${esc(q)}” →</button>`;results.classList.add('open');recordEvent('search',{query:q,branch,count:data.length});$('[data-search-atlas]')?.addEventListener('click',()=>{openDrawer($('#atlasDrawer'));askAtlas(`Help me find: ${q}`)})}catch{results.innerHTML='<div class="search-status">Search is temporarily unavailable.</div>';results.classList.add('open')}}
 search?.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,160)});branchFilter?.addEventListener('change',runSearch);document.addEventListener('click',e=>{if(results&&!e.target.closest('.hero-search'))results.classList.remove('open')});
+if(search&&new URLSearchParams(location.search).get('focus')==='search'){setTimeout(focusSearch,80);}
 
 /* Favorites + recently viewed */
 function itemKey(i){return i.url}
@@ -74,5 +75,18 @@ function closeTour(){tour?.classList.remove('open');tour?.setAttribute('aria-hid
 $('#startTour')?.addEventListener('click',openTour);$('.tour-close')?.addEventListener('click',closeTour);$('#tourBack')?.addEventListener('click',()=>{tourIndex=Math.max(0,tourIndex-1);renderTour()});$('#tourNext')?.addEventListener('click',()=>{if(tourIndex===tourSteps.length-1)return closeTour();tourIndex++;renderTour()});if(body.dataset.page==='home'&&!localStorage.getItem(STORE.tour))setTimeout(openTour,650);
 
 /* PWA */
-if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js').catch(()=>{}))}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',async()=>{
+    const isLocal=['127.0.0.1','localhost'].includes(location.hostname);
+    if(isLocal){
+      try{
+        const regs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+        if('caches' in window){const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)))}
+      }catch(e){}
+      return;
+    }
+    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+  });
+}
 window.addEventListener('offline',()=>showToast('You are offline. Cached prototype pages remain available.'));window.addEventListener('online',()=>showToast('Back online.'));

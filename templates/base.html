@@ -14,7 +14,7 @@
       href="{{ url_for('static', filename='assets/hero-maui-sunset.jpg') }}"
       as="image"
       fetchpriority="high">
-  <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css', v='maui-reskin-final-1') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css', v='wailuku-final-clean-20260924') }}">
 </head>
 <body data-page="{% block page_id %}page{% endblock %}">
 <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -37,5 +37,5 @@
 <div class="tour" id="onboardingTour" aria-hidden="true"><div class="tour-card"><button class="icon-button tour-close" type="button" aria-label="Close tour">×</button><img src="{{ url_for('static',filename='assets/master-mark.svg') }}" alt="" class="tour-mark"><span class="kicker">Welcome</span><h2>One workspace. Eight libraries.</h2><p id="tourText">This prototype demonstrates a shared staff workspace across Maui County libraries.</p><div class="tour-progress" id="tourProgress"></div><div class="tour-actions"><button class="soft-button" id="tourBack">Back</button><button class="primary-button" id="tourNext">Next</button></div></div></div>
 <div class="scrim" id="scrim"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>window.MCLW={{ branches|tojson }};</script>
-<script src="{{ url_for('static',filename='js/app.js', v='maui-reskin-final-1') }}"></script>
+<script src="{{ url_for('static',filename='js/app.js', v='wailuku-final-clean-20260924') }}"></script>
 </body></html>

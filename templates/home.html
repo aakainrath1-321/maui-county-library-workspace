@@ -34,7 +34,7 @@
     {% for branch in branches %}
     <a class="dashboard-library-card track-view" href="{{ url_for('branch', branch_slug=branch.slug) }}" data-title="{{ branch.name }}" data-url="{{ url_for('branch', branch_slug=branch.slug) }}">
       <div class="branch-cover branch-cover-{{ loop.index }}"><img src="{{ url_for('static', filename='assets/branches/' + branch.photo) }}" onerror="this.remove()" alt="{{ branch.name }} exterior"></div>
-      <div class="dashboard-library-card-body"><img class="branch-card-logo" src="{{ url_for('static', filename='assets/logos/' + branch.logo) }}" alt="{{ branch.name }} logo"><div><h3>{{ branch.name.replace(' Public/School Library','').replace(' Public Library','') }}</h3><small>{{ branch.island }} · Branch workspace</small></div><span aria-hidden="true">›</span></div>
+      <div class="dashboard-library-card-body"><div class="hspls-branch-lockup" aria-label="{{ branch.name }} — Hawaiʻi State Public Library System"><img class="hspls-lockup-emblem" src="{{ url_for('static', filename='assets/logos/hspls-emblem.png') }}" alt=""><span class="hspls-lockup-copy"><strong>{{ branch.name.replace('Public/School','Public and School') }}</strong><small>Hawaiʻi State Public Library System</small></span></div><div class="branch-card-meta"><h3>{{ branch.name.replace(' Public/School Library','').replace(' Public Library','') }}</h3><small>{{ branch.island }} · Branch workspace</small></div><span class="branch-card-arrow" aria-hidden="true">›</span></div>
       <button class="favorite-button" type="button" data-favorite data-title="{{ branch.name }}" data-url="{{ url_for('branch', branch_slug=branch.slug) }}" aria-label="Favorite {{ branch.name }}">☆</button>
     </a>
     {% endfor %}

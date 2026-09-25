@@ -1,3 +1,87 @@
 {% extends 'base.html' %}
-{% macro node(item,depth=0) %}<article class="resource-node track-view" id="{{ item.slug }}" data-depth="{{ depth }}" data-title="{{ branch.name }} — {{ section.name }} — {{ item.name }}" data-url="{{ request.path }}#{{ item.slug }}"><div class="node-main"><div><span class="resource-type">{% if item.children %}Folder / area{% else %}Workspace area{% endif %}</span><h3>{{ item.name }}</h3><p>{% if item.children %}Open this area to access its organized sub-sections and future resources.{% else %}Approved resources, files, links, and tools can be added here after adoption.{% endif %}</p></div><div class="node-actions"><button type="button" data-favorite data-title="{{ branch.name }} — {{ item.name }}" data-url="{{ request.path }}#{{ item.slug }}" aria-label="Favorite {{ item.name }}">☆</button><button type="button" class="demo-edit-control" data-demo-add="file">＋ File</button></div></div>{% if item.children %}<div class="child-nodes">{% for child in item.children %}{{ node(child,depth+1) }}{% endfor %}</div>{% endif %}</article>{% endmacro %}
-{% block title %}{{ section.name }} | {{ branch.name }}{% endblock %}{% block page_id %}section{% endblock %}{% block content %}<section class="page-hero track-view" data-title="{{ branch.name }} — {{ section.name }}" data-url="{{ request.path }}"><a class="back-link" href="{{ url_for('branch',branch_slug=branch.slug) }}">← {{ branch.name }}</a><span class="eyebrow">{{ branch.name }}</span><h1>{{ section.name }}</h1><p>{{ section.description }}</p><div class="page-hero-actions"><button class="primary-button" data-favorite data-title="{{ branch.name }} — {{ section.name }}" data-url="{{ request.path }}">☆ Favorite area</button><button class="soft-button" data-atlas-open>✦ Ask Atlas</button><button class="soft-button" data-edit-toggle>✎ Edit Workspace</button></div></section><section class="content-section"><div class="resource-tree">{% for item in section["items"] %}{{ node(item) }}{% endfor %}</div><button class="demo-edit-control add-large" data-demo-add="section">＋ Add Section</button></section>{% endblock %}
+
+{% macro file_link(file) %}
+<a class="wailuku-file-link integrated-file-link" href="{{ file.external_url if file.external_url else url_for('static', filename=file.path) }}" target="_blank" rel="noopener">
+  <span class="wailuku-file-type">{{ file.ext|upper }}</span>
+  <span class="integrated-file-copy">
+    <strong>{{ file.name }}</strong>
+    <small>{{ 'Open link ↗' if file.external_url else 'Open file ↗' }}</small>
+  </span>
+</a>
+{% endmacro %}
+
+{% macro resource_folder(folder, depth=0) %}
+<div class="integrated-resource-folder" data-depth="{{ depth }}">
+  <div class="integrated-folder-title">{{ folder.name }}</div>
+  <div class="integrated-folder-contents">
+    {% for entry in folder.children %}
+      {% if entry.type == 'folder' %}{{ resource_folder(entry, depth+1) }}{% else %}{{ file_link(entry) }}{% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro node(item, depth=0) %}
+<article class="resource-node track-view" id="{{ item.slug }}" data-depth="{{ depth }}" data-title="{{ branch.name }} — {{ section.name }} — {{ item.name }}" data-url="{{ request.path }}#{{ item.slug }}">
+  <div class="node-main">
+    <div><h3>{{ item.name }}</h3></div>
+    <div class="node-actions">
+      {% if branch.slug != 'wailuku' %}<button type="button" data-favorite data-title="{{ branch.name }} — {{ item.name }}" data-url="{{ request.path }}#{{ item.slug }}" aria-label="Favorite {{ item.name }}">☆</button>{% endif %}
+      <button type="button" class="demo-edit-control" data-demo-add="file">＋ File</button>
+    </div>
+  </div>
+  {% if item.files %}
+  <div class="integrated-files">
+    {% for file in item.files %}{{ file_link(file) }}{% endfor %}
+  </div>
+  {% endif %}
+  {% if item.resource_folders %}
+  <div class="integrated-resource-folders">
+    {% for folder in item.resource_folders %}{{ resource_folder(folder) }}{% endfor %}
+  </div>
+  {% endif %}
+  {% if item.children %}
+  <div class="child-nodes">
+    {% for child in item.children %}{{ node(child, depth+1) }}{% endfor %}
+  </div>
+  {% endif %}
+</article>
+{% endmacro %}
+
+{% block title %}{{ section.name }} | {{ branch.name }}{% endblock %}
+{% block page_id %}section{% endblock %}
+{% block content %}
+<section class="page-hero track-view" data-title="{{ branch.name }} — {{ section.name }}" data-url="{{ request.path }}">
+  <a class="back-link" href="{{ url_for('branch',branch_slug=branch.slug) }}">← {{ branch.name }}</a>
+  <span class="eyebrow">{{ branch.name }}</span>
+  <h1>{{ section.name }}</h1>
+  <p>{{ section.description }}</p>
+  <div class="page-hero-actions">
+    <button class="primary-button" data-favorite data-title="{{ branch.name }} — {{ section.name }}" data-url="{{ request.path }}">☆ Favorite area</button>
+    <button class="soft-button" data-atlas-open>✦ Ask Atlas</button>
+    <button class="soft-button" data-search-focus>⌕ Search workspace</button>
+    <button class="soft-button" data-edit-toggle>✎ Edit Workspace</button>
+  </div>
+</section>
+{% if branch.slug == 'wailuku' %}
+<section class="content-section wailuku-section-work">
+  <div class="section-heading"><div><span class="eyebrow">Available here</span><h2>Resources for this work</h2></div><p>Only resources that are actually available are shown. Empty filing structure stays out of the way.</p></div>
+  {% if section.visible_items %}
+  <div class="wailuku-resource-list">{% for item in section.visible_items %}{{ node(item) }}{% endfor %}</div>
+  {% else %}
+  <div class="workspace-ready-state">
+    <span class="eyebrow">Workspace ready</span>
+    <h3>No shared resources have been added here yet.</h3>
+    <p>The work area is available in Wailuku's structure, but we won't fill the screen with empty folders. Use Search or Atlas to find related information, or return to the branch workspace.</p>
+    <div class="page-hero-actions"><button class="soft-button" data-search-focus>⌕ Find something</button><button class="soft-button" data-atlas-open>✦ Ask Atlas</button><a class="primary-button" href="{{ url_for('branch',branch_slug=branch.slug) }}">Back to Wailuku</a></div>
+  </div>
+  {% endif %}
+  <button class="demo-edit-control add-large" data-demo-add="section">＋ Add Section</button>
+</section>
+{% else %}
+<section class="content-section">
+  <div class="resource-tree">{% for item in section["items"] %}{{ node(item) }}{% endfor %}</div>
+  <button class="demo-edit-control add-large" data-demo-add="section">＋ Add Section</button>
+</section>
+{% endif %}
+{% endblock %}
