@@ -14,13 +14,12 @@
     <p>{% if branch.slug == 'wailuku' %}The digital home for Wailuku's day-to-day work—staff coordination, branch operations, shared resources, Bookmobile activity, and collaboration.{% else %}Navigate branch work through the same four countywide core areas while keeping this branch's workspace distinct.{% endif %}</p>
     <div class="page-hero-actions">
       <button class="primary-button" data-favorite data-title="{{ branch.name }}" data-url="{{ request.path }}">☆ Favorite branch</button>
-      <button class="soft-button" data-atlas-open>✦ Ask Atlas about this branch</button>{% if branch.slug == 'wailuku' %}<a class="soft-button" href="https://librarieshawaii-my.sharepoint.com/my?id=%2Fpersonal%2Fadam_kainrath_librarieshawaii_org%2FDocuments%2FWailuku%20Public%20Library%20Branch%20Master%20Folder" target="_blank" rel="noopener">Open master folder ↗</a>{% endif %}
+      <button class="soft-button" data-atlas-open>✦ Ask Atlas about this branch</button>{% if branch.slug == 'wailuku' %}<div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px"><a class="soft-button" href="https://librarieshawaii-my.sharepoint.com/my?id=%2Fpersonal%2Fadam_kainrath_librarieshawaii_org%2FDocuments%2FWailuku%20Public%20Library%20Branch%20Master%20Folder" target="_blank" rel="noopener">Open master folder ↗</a>{% if onedrive_sync_owner %}<a href="/branch/wailuku/onedrive" style="font-size:0.875rem;text-underline-offset:3px">Manage OneDrive connection</a>{% endif %}</div>{% endif %}
     </div>
   </div>
 </section>
 
 {% if branch.slug == 'wailuku' %}
-{% if onedrive_sync_owner %}<p><a class="soft-button" href="/branch/wailuku/onedrive">OneDrive connection</a></p>{% endif %}
 <section class="content-section wailuku-now" aria-labelledby="wailuku-now-title">
   <div class="section-heading wailuku-heading"><div><span class="eyebrow">Work at Wailuku</span><h2 id="wailuku-now-title">Start with what you need.</h2></div><p>This page surfaces the work people actually do. The filing structure stays underneath it.</p></div>
   <div class="wailuku-primary-actions">
