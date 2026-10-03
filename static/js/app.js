@@ -86,7 +86,7 @@ if('serviceWorker' in navigator){
       }catch(e){}
       return;
     }
-    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+    // Authentication requires network checks; do not cache staff resources offline.
   });
 }
-window.addEventListener('offline',()=>showToast('You are offline. Cached prototype pages remain available.'));window.addEventListener('online',()=>showToast('Back online.'));
+window.addEventListener('offline',()=>showToast('You are offline. Reconnect to access the staff workspace.'));window.addEventListener('online',()=>showToast('Back online.'));

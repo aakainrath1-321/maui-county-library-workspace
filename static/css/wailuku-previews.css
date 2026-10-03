@@ -1,0 +1,13 @@
+.wailuku-file-with-preview{min-width:0;position:relative}
+.wailuku-file-with-preview .wailuku-file-link{padding-right:42px;min-height:100px}
+.wailuku-file-thumbnail{width:72px;height:80px;flex:0 0 72px;object-fit:contain;background:#f6f6f3;border:1px solid var(--line);border-radius:5px}
+.wailuku-file-enlarge{position:absolute;right:8px;top:10px;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:white;color:var(--ocean);cursor:pointer;font-size:17px}
+.wailuku-file-enlarge:hover{background:var(--sage-soft)}
+#wailukuPreviewDialog{width:min(1040px,94vw);max-height:92vh;overflow:auto;padding:22px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--ink)}
+#wailukuPreviewDialog::backdrop{background:rgba(16,32,30,.65)}
+.preview-dialog-head{display:flex;align-items:start;justify-content:space-between;gap:20px}
+.preview-dialog-head h2{margin:0;font-size:20px;overflow-wrap:anywhere}
+#wailukuPreviewClose{flex:0 0 36px;height:36px;cursor:pointer;border:1px solid var(--line);border-radius:8px;background:white;font-size:24px}
+#wailukuPreviewImage{display:block;max-width:100%;max-height:65vh;object-fit:contain;margin:16px auto;background:#f6f6f3}
+#wailukuPreviewLabel{color:var(--muted);font-size:13px}
+@media(max-width:560px){.wailuku-file-thumbnail{width:54px;height:70px;flex-basis:54px}}
