@@ -1,5 +1,12 @@
 .wailuku-file-with-preview{min-width:0;position:relative}
-.wailuku-file-with-preview .wailuku-file-link{padding-right:42px;min-height:100px}
+.wailuku-section-work .wailuku-resource-list .child-nodes{grid-template-columns:minmax(0,1fr)}
+.wailuku-section-work .integrated-files{grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+.wailuku-section-work .resource-node,.wailuku-section-work .integrated-resource-folder,.wailuku-section-work .integrated-folder-contents{min-width:0}
+.wailuku-file-with-preview .wailuku-file-link{display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;row-gap:5px;align-items:center;padding-right:42px;min-height:110px}
+.wailuku-file-with-preview .wailuku-file-thumbnail{grid-column:1;grid-row:1 / span 2}
+.wailuku-file-with-preview .wailuku-file-type{grid-column:2;grid-row:1;justify-self:start;align-self:end}
+.wailuku-file-with-preview .integrated-file-copy{grid-column:2;grid-row:2;align-self:start;min-width:0}
+.wailuku-file-with-preview strong{word-break:normal;overflow-wrap:break-word;line-height:1.4}
 .wailuku-file-thumbnail{width:72px;height:80px;flex:0 0 72px;object-fit:contain;background:#f6f6f3;border:1px solid var(--line);border-radius:5px}
 .wailuku-file-enlarge{position:absolute;right:8px;top:10px;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:white;color:var(--ocean);cursor:pointer;font-size:17px}
 .wailuku-file-enlarge:hover{background:var(--sage-soft)}
@@ -10,4 +17,4 @@
 #wailukuPreviewClose{flex:0 0 36px;height:36px;cursor:pointer;border:1px solid var(--line);border-radius:8px;background:white;font-size:24px}
 #wailukuPreviewImage{display:block;max-width:100%;max-height:65vh;object-fit:contain;margin:16px auto;background:#f6f6f3}
 #wailukuPreviewLabel{color:var(--muted);font-size:13px}
-@media(max-width:560px){.wailuku-file-thumbnail{width:54px;height:70px;flex-basis:54px}}
+@media(max-width:560px){.wailuku-file-thumbnail{width:54px;height:70px;flex-basis:54px}.wailuku-file-with-preview .wailuku-file-link{grid-template-columns:54px minmax(0,1fr);column-gap:9px;padding-left:10px}.wailuku-section-work .resource-node{padding:12px!important}}
