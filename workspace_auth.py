@@ -42,9 +42,9 @@ def configure_auth(app, base):
     def microsoft_enabled():return microsoft_config() is not None
     def local_enabled():return not (production and any(os.environ.get('MICROSOFT_'+k) for k in ('CLIENT_ID','TENANT_ID','CLIENT_SECRET','REDIRECT_URI'))) and bool(users())
     def configured():return (microsoft_enabled() or local_enabled()) and (not production or len(secret)>=32)
-    def microsoft_client(config):
+    def microsoft_client(config,cache=None):
         import msal
-        return msal.ConfidentialClientApplication(config['CLIENT_ID'],authority='https://login.microsoftonline.com/'+config['TENANT_ID'],client_credential=config['CLIENT_SECRET'])
+        return msal.ConfidentialClientApplication(config['CLIENT_ID'],authority='https://login.microsoftonline.com/'+config['TENANT_ID'],client_credential=config['CLIENT_SECRET'],token_cache=cache)
     def csrf():
         if 'csrf' not in session:session['csrf']=secrets.token_urlsafe(32)
         return session['csrf']
@@ -120,6 +120,7 @@ def configure_auth(app, base):
             # MSAL adds OpenID scopes, state, nonce and PKCE. No Graph permissions.
             flow=microsoft_client(config).initiate_auth_code_flow(scopes=[],redirect_uri=config['REDIRECT_URI'],response_mode='query',prompt='select_account')
             if not flow.get('auth_uri'):raise ValueError('Missing authorization URL')
+            session.pop('microsoft_sync_owner',None)
             session['microsoft_flow']=flow
             session['microsoft_flow_started']=time.time()
             session['microsoft_next']=safe_next(request.form.get('next'))
@@ -138,7 +139,12 @@ def configure_auth(app, base):
         state=request.args.get('state','')
         if not flow or time.time()-started>600 or not state or not hmac.compare_digest(state,flow.get('state','')):return microsoft_error('Sign-in expired. Please start again.',400)
         try:
-            result=microsoft_client(config).acquire_token_by_auth_code_flow(flow,request.args)
+            sync_owner=session.pop('microsoft_sync_owner',None)
+            cache=None
+            if sync_owner:
+                import msal
+                cache=msal.SerializableTokenCache()
+            result=microsoft_client(config,cache).acquire_token_by_auth_code_flow(flow,request.args)
             if result.get('error') or not result.get('id_token'):return microsoft_error('Microsoft could not complete sign-in. Try again, or contact HSPLS IT if approval is required.',401)
             # Independently validate the signature as well as MSAL's nonce checks.
             import jwt
@@ -147,6 +153,12 @@ def configure_auth(app, base):
             claims=jwt.decode(result['id_token'],key,algorithms=['RS256'],audience=config['CLIENT_ID'],issuer='https://login.microsoftonline.com/'+config['TENANT_ID']+'/v2.0',options={'require':['exp','iat','iss','aud','tid','oid','nonce']})
             if claims.get('tid')!=config['TENANT_ID'] or not claims.get('oid'):return microsoft_error('This workspace requires an HSPLS work account.',403)
             if str(claims.get('acct'))!='0':return microsoft_error('An HSPLS staff member account is required. If you are staff, ask the app owner to enable the Microsoft acct claim.',403)
+            if sync_owner:
+                sync=app.extensions.get('onedrive_sync')
+                if not sync or sync_owner!=claims['oid'] or not sync.is_owner():return microsoft_error('Reconnect using the configured source owner’s account.',403)
+                granted=set(result.get('scope','').lower().split())
+                if not any(v in granted for v in ('files.read','https://graph.microsoft.com/files.read')):return microsoft_error('Microsoft did not grant read access to OneDrive.',403)
+                sync.save_connection(claims,cache)
             session.clear();session.permanent=True
             session.update(auth_provider='microsoft',tenant_id=config['TENANT_ID'],client_id=config['CLIENT_ID'],staff_oid=claims['oid'],account_member=True,expires_at=min(time.time()+8*3600,claims['exp']))
             csrf()
@@ -157,3 +169,5 @@ def configure_auth(app, base):
     @app.post('/logout',endpoint='staff_logout')
     def logout():
         session.clear();return redirect(url_for('staff_login'))
+
+    return {'config':microsoft_config,'client':microsoft_client}

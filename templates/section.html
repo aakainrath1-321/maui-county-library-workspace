@@ -11,14 +11,14 @@
 {% endmacro %}{% macro preview_file_link(file) %}
 {% if branch.slug == 'wailuku' and file.preview %}<div class="wailuku-file-with-preview">{% endif %}
 <a class="wailuku-file-link integrated-file-link" href="{{ file.onedrive_url if file.onedrive_url else (file.external_url if file.external_url else url_for('static', filename=file.path)) }}" target="_blank" rel="noopener">
-  {% if branch.slug == 'wailuku' and file.preview %}<img class="wailuku-file-thumbnail" src="{{ url_for('static', filename=file.preview.path) }}" alt="{{ file.preview.label }}" loading="lazy" width="72" height="80">{% endif %}
+  {% if branch.slug == 'wailuku' and file.preview %}<img class="wailuku-file-thumbnail" src="{{ file.preview.url if file.preview.url else url_for('static', filename=file.preview.path) }}" alt="{{ file.preview.label }}" loading="lazy" width="72" height="80">{% endif %}
   <span class="wailuku-file-type">{{ file.ext|upper }}</span>
   <span class="integrated-file-copy">
     <strong>{{ file.name }}</strong>
     <small>{{ 'Open in OneDrive ↗' if file.onedrive_url else ('Open link ↗' if file.external_url else 'Open file ↗') }}</small>
   </span>
 </a>
-{% if branch.slug == 'wailuku' and file.preview %}<button type="button" class="wailuku-file-enlarge" data-file-preview="{{ url_for('static', filename=file.preview.path) }}" data-file-title="{{ file.name }}" data-file-label="{{ file.preview.label }}" data-file-url="{{ file.onedrive_url if file.onedrive_url else url_for('static',filename=file.path) }}" aria-label="Enlarge preview of {{ file.name }}" title="Enlarge preview">⤢</button></div>{% endif %}
+{% if branch.slug == 'wailuku' and file.preview %}<button type="button" class="wailuku-file-enlarge" data-file-preview="{{ file.preview.url if file.preview.url else url_for('static', filename=file.preview.path) }}" data-file-title="{{ file.name }}" data-file-label="{{ file.preview.label }}" data-file-url="{{ file.onedrive_url if file.onedrive_url else url_for('static',filename=file.path) }}" aria-label="Enlarge preview of {{ file.name }}" title="Enlarge preview">⤢</button></div>{% endif %}
 {% endmacro %}
 
 {% macro resource_folder(folder, depth=0) %}

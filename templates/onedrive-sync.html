@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}OneDrive connection | Wailuku{% endblock %}
+{% block content %}
+<section class="content-section" style="max-width:780px;margin:40px auto">
+<a href="/branch/wailuku">← Wailuku workspace</a>
+<h1>OneDrive connection</h1>
+<p>Connect your Wailuku master folder to keep the workspace resources up to date.</p>
+<p role="status">{{ message }}</p>
+{% if not ready %}<p>Connection setup is incomplete. Configure the owner account, encryption key, and private persistent storage before connecting.</p>
+{% else %}
+<p>Microsoft requests read access to your OneDrive files. The workspace reads only the Wailuku master folder and its contents. It does not change or delete anything in OneDrive. Its resource list and previews are available to staff who can access this workspace.</p>
+<p>Changes appear after the next check, usually within five minutes while the service is running. Microsoft may ask for approval or for you to reconnect.</p>
+<form method="post" action="/branch/wailuku/onedrive/connect"><input type="hidden" name="csrf_token" value="{{ workspace_csrf() }}"><button class="primary-button" type="submit">{{ 'Reconnect OneDrive' if connected else 'Connect OneDrive' }}</button></form>
+{% if connected %}<form method="post" action="/branch/wailuku/onedrive/disconnect" style="margin-top:20px"><input type="hidden" name="csrf_token" value="{{ workspace_csrf() }}"><button class="soft-button" type="submit">Disconnect and use saved resources</button></form>{% endif %}
+{% endif %}
+</section>
+{% endblock %}

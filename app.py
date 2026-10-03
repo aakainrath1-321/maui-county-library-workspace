@@ -95,7 +95,7 @@ def atlas_navigation_is_valid(url):
     if base in {"/", "/prototype", "/authentication"}:
         return True
     # SEARCH_INDEX is built from the same branch/section definitions used by Flask routes.
-    return any((item.get("url") or "").split("#", 1)[0] == base for item in globals().get("SEARCH_INDEX", []))
+    return any((item.get("url") or "").split("#", 1)[0] == base for item in (flatten_nodes() if live_wailuku_catalog() is not None else globals().get("SEARCH_INDEX", [])))
 
 def parse_atlas_actions(text):
     actions = []
@@ -214,8 +214,25 @@ init_db()
 
 def get_branch(slug): return next((b for b in BRANCHES if b['slug']==slug),None)
 def get_section(slug, branch_slug=None):
- sections = WAILUKU_SECTIONS if branch_slug == 'wailuku' else SECTIONS
+ sections = current_wailuku_sections() if branch_slug == 'wailuku' else SECTIONS
  return next((s for s in sections if s['slug']==slug),None)
+
+def live_wailuku_catalog():
+ sync=app.extensions.get('onedrive_sync')
+ return sync.catalog() if sync else None
+
+def current_wailuku_sections():
+ catalog=live_wailuku_catalog()
+ if catalog is None:return WAILUKU_SECTIONS
+ known={s['name']:s for s in WAILUKU_SECTIONS}
+ sections=[]
+ for name in catalog:
+  if name in known:sections.append(known[name])
+  else:
+   import hashlib
+   slug='folder-'+re.sub(r'[^a-z0-9]+','-',name.lower()).strip('-')[:60]+'-'+hashlib.sha256(name.encode()).hexdigest()[:8]
+   sections.append({'slug':slug,'name':name,'description':'Resources from the Wailuku OneDrive master folder.','items':[]})
+ return sections
 
 WAILUKU_FILES_ROOT = BASE_DIR / 'static' / 'wailuku-files'
 try:
@@ -225,6 +242,8 @@ except (OSError, ValueError):
 
 def build_wailuku_file_tree(section_name):
  """Return the packaged Wailuku resource files for one branch section."""
+ live=live_wailuku_catalog()
+ if live is not None:return live.get(section_name,[])
  catalog_path=BASE_DIR/'static/wailuku-resource-catalog.json'
  if catalog_path.exists():
   return json.loads(catalog_path.read_text()).get(section_name,[])
@@ -297,7 +316,9 @@ def merge_wailuku_resources(items, resources, root_resources=None):
   node['resource_folders']=[r for r in folder_entries if r['type']=='folder' and r['name'] not in represented]
   merged.append(node)
  # Section-level files are rare; keep them visible rather than silently dropping them.
- if loose_files and merged:
+ if loose_files and not merged:
+  merged.append({'slug':'folder-files','name':'Files','files':loose_files})
+ elif loose_files and merged:
   merged[0].setdefault('files',[]).extend(loose_files)
  if resources is root_resources:
   represented={i.get('resource_path', [i.get('resource_name', i['name'])])[0] for i in items}
@@ -323,7 +344,7 @@ def visible_wailuku_items(items):
 def flatten_nodes():
  nodes=[]
  for b in BRANCHES:
-  branch_sections = WAILUKU_SECTIONS if b['slug']=='wailuku' else SECTIONS
+  branch_sections = current_wailuku_sections() if b['slug']=='wailuku' else SECTIONS
   nodes.append({'label':b['name'],'url':f"/branch/{b['slug']}",'keywords':f"{b['name']} branch library {b['island']}"})
   for s in branch_sections:
    nodes.append({'label':f"{b['name']} — {s['name']}",'url':f"/branch/{b['slug']}/{s['slug']}",'keywords':f"{b['name']} {s['name']} {s['description']}"})
@@ -357,7 +378,7 @@ def authentication(): return render_template('authentication.html')
 def branch(branch_slug):
  b=get_branch(branch_slug)
  if not b: abort(404)
- branch_sections = WAILUKU_SECTIONS if branch_slug == 'wailuku' else SECTIONS
+ branch_sections = current_wailuku_sections() if branch_slug == 'wailuku' else SECTIONS
  return render_template('branch.html',branch=b,branch_sections=branch_sections)
 @app.get('/branch/<branch_slug>/<section_slug>')
 def section(branch_slug,section_slug):
@@ -375,7 +396,7 @@ def search():
  branch=(request.args.get('branch') or '').strip().lower()
  terms=[t for t in q.split() if t]
  scored=[]
- for item in SEARCH_INDEX:
+ for item in (flatten_nodes() if live_wailuku_catalog() is not None else SEARCH_INDEX):
   if branch and f"/branch/{branch}" not in item['url']:
    continue
   hay=(item['label']+' '+item['keywords']).lower()
@@ -401,7 +422,7 @@ def feedback():
  return jsonify({'ok':True,'message':'Thank you. Your feedback was saved.'})
 def wailuku_atlas_catalog(current_path, message):
     """Prioritize the user's Wailuku task instead of truncating the first sections."""
-    candidates=[i for i in SEARCH_INDEX if i.get('url','').startswith('/branch/wailuku')]
+    candidates=[i for i in (flatten_nodes() if live_wailuku_catalog() is not None else SEARCH_INDEX) if i.get('url','').startswith('/branch/wailuku')]
     terms=set(re.findall(r'[a-z0-9]+', message.lower()))-{'the','a','an','i','to','for','is','of','and','with','where','can','you','me'}
     path=(current_path or '').split('#',1)[0].split('?',1)[0]
     def score(item):
@@ -459,7 +480,7 @@ def atlas():
     )
 
     if current_path.startswith('/branch/wailuku'):
-        context_text += "\nWAILUKU FILE PREVIEWS\nResource cards show generated thumbnails where available. Staff can use Enlarge preview, close with Escape, and Open original file for the full document. Spreadsheet thumbnails show the first printed page, not every worksheet. Resource links open originals in the HSPLS work OneDrive. Edits to those originals are available when opened. The resource listing and thumbnails are snapshots and do not automatically refresh; moved or renamed files require link updates. Catalog labels and filenames do not establish a document's contents: do not claim to have read the file or edited it. Navigate to the resource's indexed workspace area to help the user find it.\n"
+        context_text += "\nWAILUKU FILE PREVIEWS\nResource cards show generated thumbnails where available. Staff can use Enlarge preview, close with Escape, and Open original file for the full document. Spreadsheet thumbnails show the first printed page, not every worksheet. Resource links open originals in the HSPLS work OneDrive. Edits to those originals are available when opened. When the owner has connected OneDrive sync, resource listings refresh periodically and previews come from OneDrive. Otherwise the listing and thumbnails remain snapshots and moved or renamed files require link updates. Sync status is visible to the source owner on the OneDrive connection page. Catalog labels and filenames do not establish a document's contents: do not claim to have read the file or edited it. Navigate to the resource's indexed workspace area to help the user find it.\n"
     contents = []
     for item in history[-ATLAS_MAX_HISTORY:]:
         role = "model" if item.get("role") == "model" else "user"
@@ -577,6 +598,8 @@ def server_error(error):
 
 # Install access protection after the existing route definitions.
 from workspace_auth import configure_auth
-configure_auth(app, BASE_DIR)
+auth_helpers=configure_auth(app, BASE_DIR)
+from onedrive_sync import OneDriveSync
+OneDriveSync(app, BASE_DIR, auth_helpers)
 
 if __name__=='__main__': app.run(debug=os.environ.get('FLASK_DEBUG')=='1')
