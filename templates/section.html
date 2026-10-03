@@ -1,13 +1,24 @@
 {% extends 'base.html' %}
 
 {% macro file_link(file) %}
-<a class="wailuku-file-link integrated-file-link" href="{{ file.external_url if file.external_url else url_for('static', filename=file.path) }}" target="_blank" rel="noopener">
+<a class="wailuku-file-link integrated-file-link" href="{{ file.onedrive_url if file.onedrive_url else (file.external_url if file.external_url else url_for('static', filename=file.path)) }}" target="_blank" rel="noopener">
   <span class="wailuku-file-type">{{ file.ext|upper }}</span>
   <span class="integrated-file-copy">
     <strong>{{ file.name }}</strong>
-    <small>{{ 'Open link ↗' if file.external_url else 'Open file ↗' }}</small>
+    <small>{{ 'Open in OneDrive ↗' if file.onedrive_url else ('Open link ↗' if file.external_url else 'Open file ↗') }}</small>
   </span>
 </a>
+{% endmacro %}{% macro preview_file_link(file) %}
+{% if branch.slug == 'wailuku' and file.preview %}<div class="wailuku-file-with-preview">{% endif %}
+<a class="wailuku-file-link integrated-file-link" href="{{ file.onedrive_url if file.onedrive_url else (file.external_url if file.external_url else url_for('static', filename=file.path)) }}" target="_blank" rel="noopener">
+  {% if branch.slug == 'wailuku' and file.preview %}<img class="wailuku-file-thumbnail" src="{{ url_for('static', filename=file.preview.path) }}" alt="{{ file.preview.label }}" loading="lazy" width="72" height="80">{% endif %}
+  <span class="wailuku-file-type">{{ file.ext|upper }}</span>
+  <span class="integrated-file-copy">
+    <strong>{{ file.name }}</strong>
+    <small>{{ 'Open in OneDrive ↗' if file.onedrive_url else ('Open link ↗' if file.external_url else 'Open file ↗') }}</small>
+  </span>
+</a>
+{% if branch.slug == 'wailuku' and file.preview %}<button type="button" class="wailuku-file-enlarge" data-file-preview="{{ url_for('static', filename=file.preview.path) }}" data-file-title="{{ file.name }}" data-file-label="{{ file.preview.label }}" data-file-url="{{ file.onedrive_url if file.onedrive_url else url_for('static',filename=file.path) }}" aria-label="Enlarge preview of {{ file.name }}" title="Enlarge preview">⤢</button></div>{% endif %}
 {% endmacro %}
 
 {% macro resource_folder(folder, depth=0) %}
@@ -15,7 +26,7 @@
   <div class="integrated-folder-title">{{ folder.name }}</div>
   <div class="integrated-folder-contents">
     {% for entry in folder.children %}
-      {% if entry.type == 'folder' %}{{ resource_folder(entry, depth+1) }}{% else %}{{ file_link(entry) }}{% endif %}
+      {% if entry.type == 'folder' %}{{ resource_folder(entry, depth+1) }}{% else %}{% if branch.slug == 'wailuku' and entry.preview %}{{ preview_file_link(entry) }}{% else %}{{ file_link(entry) }}{% endif %}{% endif %}
     {% endfor %}
   </div>
 </div>
@@ -32,7 +43,7 @@
   </div>
   {% if item.files %}
   <div class="integrated-files">
-    {% for file in item.files %}{{ file_link(file) }}{% endfor %}
+    {% for file in item.files %}{% if branch.slug == 'wailuku' and file.preview %}{{ preview_file_link(file) }}{% else %}{{ file_link(file) }}{% endif %}{% endfor %}
   </div>
   {% endif %}
   {% if item.resource_folders %}
@@ -50,7 +61,7 @@
 
 {% block title %}{{ section.name }} | {{ branch.name }}{% endblock %}
 {% block page_id %}section{% endblock %}
-{% block content %}
+{% block content %}{% if branch.slug == 'wailuku' %}<link rel="stylesheet" href="{{ url_for('static',filename='css/wailuku-previews.css') }}">{% endif %}
 <section class="page-hero track-view" data-title="{{ branch.name }} — {{ section.name }}" data-url="{{ request.path }}">
   <a class="back-link" href="{{ url_for('branch',branch_slug=branch.slug) }}">← {{ branch.name }}</a>
   <span class="eyebrow">{{ branch.name }}</span>
@@ -84,4 +95,7 @@
   <button class="demo-edit-control add-large" data-demo-add="section">＋ Add Section</button>
 </section>
 {% endif %}
-{% endblock %}
+{% if branch.slug == 'wailuku' %}
+<dialog id="wailukuPreviewDialog" aria-labelledby="wailukuPreviewTitle"><div class="preview-dialog-head"><h2 id="wailukuPreviewTitle"></h2><button type="button" id="wailukuPreviewClose" aria-label="Close preview">×</button></div><p id="wailukuPreviewLabel"></p><img id="wailukuPreviewImage" alt=""><a id="wailukuPreviewOpen" class="primary-button" target="_blank" rel="noopener">Open original file ↗</a></dialog>
+<script src="{{ url_for('static',filename='js/wailuku-previews.js') }}"></script>
+{% endif %}{% endblock %}

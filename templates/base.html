@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta name="csrf-token" content="{{ workspace_csrf() }}">
+  <script src="{{ url_for('static',filename='js/workspace-auth.js') }}"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#173f50">
@@ -18,7 +20,7 @@
 </head>
 <body data-page="{% block page_id %}page{% endblock %}">
 <a class="skip-link" href="#mainContent">Skip to main content</a>
-<div class="prototype-ribbon"><strong>Public Prototype</strong><span>No restricted operational content is included. Production security, authentication, storage, and Microsoft integration remain adoption-phase work.</span><a href="{{ url_for('prototype') }}">About this prototype</a></div>
+<div class="prototype-ribbon"><strong>HSPLS Staff Workspace</strong><span>Access is restricted to approved HSPLS staff.</span><a href="{{ url_for('prototype') }}">About this prototype</a></div>
 <header class="app-header">
   <a class="wordmark" href="{{ url_for('home') }}" aria-label="Maui County Library Workspace home"><img src="{{ url_for('static',filename='favicon.svg') }}" alt=""><span><strong>Maui County Library Workspace</strong><small>Master Prototype</small></span></a>
   <nav class="desktop-nav" aria-label="Primary navigation"><a href="{{ url_for('home') }}">Staff Hub</a><a href="{{ url_for('home') }}#libraries">Libraries</a><a href="{{ url_for('home') }}#staff-board">Staff Board</a><button type="button" data-my-workspace-open>My Workspace</button></nav>
@@ -26,6 +28,7 @@
 </header>
 <main id="mainContent">{% block content %}{% endblock %}</main>
 <footer class="site-footer"><div><strong>Maui County Library Workspace Prototype</strong><p>Built for collaboration. Shaped by staff.</p></div><div class="footer-links"><a href="{{ url_for('prototype') }}">Prototype guide</a><a href="{{ url_for('authentication') }}">Security concept</a><button data-feedback-open>Give Feedback</button></div></footer>
+<form action="{{ url_for('staff_logout') }}" method="post" style="position:fixed;left:16px;bottom:16px;z-index:40"><input type="hidden" name="csrf_token" value="{{ workspace_csrf() }}"><button class="soft-button" type="submit" style="font-size:12px;padding:8px 12px">Sign out</button></form>
 <button class="floating-feedback" data-feedback-open aria-label="Give feedback">Feedback</button>
 
 <aside class="drawer" id="atlasDrawer" aria-hidden="true" aria-labelledby="atlasTitle" tabindex="-1"><div class="drawer-head"><div><span class="kicker">Workspace Intelligence</span><h2 id="atlasTitle">Atlas</h2></div><div class="drawer-head-actions"><button class="icon-button" type="button" id="clearAtlas" title="Clear conversation">↺</button><button class="icon-button" type="button" data-close aria-label="Close Atlas">×</button></div></div><div class="atlas-intro"><div class="atlas-orb">A</div><div><strong>Context-aware workspace guide</strong><p>I can navigate, search, explain the hierarchy, help place resources, and open safe prototype tools.</p></div></div><div class="atlas-context" id="atlasContext">Current context: workspace</div><div class="atlas-thread" id="atlasThread" aria-live="polite"><div class="message atlas"><p>What can I help you find or do?</p></div></div><div class="suggestion-row"><button data-atlas-prompt="Take me to Wailuku policies">Wailuku policies</button><button data-atlas-prompt="Where do adult order lists go?">Order lists</button><button data-atlas-prompt="Show me what this prototype can do">Capabilities</button></div><form class="atlas-compose" id="atlasForm"><label class="sr-only" for="atlasInput">Ask Atlas</label><input id="atlasInput" placeholder="Ask Atlas…" autocomplete="off"><button>Send</button></form><small class="prototype-note">Atlas uses only the public prototype context and does not have access to internal HSPLS systems or documents.</small></aside>
