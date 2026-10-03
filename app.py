@@ -218,9 +218,16 @@ def get_section(slug, branch_slug=None):
  return next((s for s in sections if s['slug']==slug),None)
 
 WAILUKU_FILES_ROOT = BASE_DIR / 'static' / 'wailuku-files'
+try:
+ WAILUKU_PREVIEWS = json.loads((BASE_DIR/'static/wailuku-previews/manifest.json').read_text())
+except (OSError, ValueError):
+ WAILUKU_PREVIEWS = {}
 
 def build_wailuku_file_tree(section_name):
  """Return the packaged Wailuku resource files for one branch section."""
+ catalog_path=BASE_DIR/'static/wailuku-resource-catalog.json'
+ if catalog_path.exists():
+  return json.loads(catalog_path.read_text()).get(section_name,[])
  section_root = WAILUKU_FILES_ROOT / section_name
  if not section_root.exists() or not section_root.is_dir():
   return []
@@ -238,6 +245,9 @@ def build_wailuku_file_tree(section_name):
    elif child.is_file():
     rel=child.relative_to(BASE_DIR/'static').as_posix()
     entry={'type':'file','name':child.name,'path':rel,'ext':child.suffix.lower().lstrip('.') or 'file'}
+    preview = WAILUKU_PREVIEWS.get(child.relative_to(WAILUKU_FILES_ROOT).as_posix())
+    if preview:
+     entry['preview'] = preview
     if child.suffix.lower() == '.url':
      try:
       for line in child.read_text(errors='ignore').splitlines():
@@ -289,6 +299,11 @@ def merge_wailuku_resources(items, resources, root_resources=None):
  # Section-level files are rare; keep them visible rather than silently dropping them.
  if loose_files and merged:
   merged[0].setdefault('files',[]).extend(loose_files)
+ if resources is root_resources:
+  represented={i.get('resource_path', [i.get('resource_name', i['name'])])[0] for i in items}
+  for resource in resources:
+   if resource['type']=='folder' and resource['name'] not in represented:
+    merged.append({'slug':'resource-'+re.sub(r'[^a-z0-9]+','-',resource['name'].lower()).strip('-'), 'name':resource['name'], 'files':[r for r in resource['children'] if r['type']=='file'], 'resource_folders':[r for r in resource['children'] if r['type']=='folder']})
  return merged
 
 def visible_wailuku_items(items):
@@ -384,6 +399,24 @@ def feedback():
  display='Anonymous' if anonymous else (name or 'Staff member')
  c=db(); c.execute('INSERT INTO feedback(display_name,is_anonymous,branch,category,message,created_at) VALUES(?,?,?,?,?,?)',(display,1 if anonymous else 0,branch,category,message,datetime.now(timezone.utc).isoformat())); c.commit(); c.close()
  return jsonify({'ok':True,'message':'Thank you. Your feedback was saved.'})
+def wailuku_atlas_catalog(current_path, message):
+    """Prioritize the user's Wailuku task instead of truncating the first sections."""
+    candidates=[i for i in SEARCH_INDEX if i.get('url','').startswith('/branch/wailuku')]
+    terms=set(re.findall(r'[a-z0-9]+', message.lower()))-{'the','a','an','i','to','for','is','of','and','with','where','can','you','me'}
+    path=(current_path or '').split('#',1)[0].split('?',1)[0]
+    def score(item):
+        words=set(re.findall(r'[a-z0-9]+', (item['label']+' '+item.get('keywords','')).lower()))
+        return (len(terms & words), int(item['url'].split('#',1)[0]==path))
+    overview=[i for i in candidates if '#' not in i['url'] and 'file document resource' not in i.get('keywords','')]
+    ranked=sorted(candidates,key=score,reverse=True)
+    selected=[];seen=set()
+    for item in overview+ranked:
+        identity=(item['label'],item['url'])
+        if identity not in seen:
+            seen.add(identity);selected.append(item)
+        if len(selected)>=120:break
+    return selected
+
 @app.post('/api/atlas')
 def atlas():
     payload = request.get_json(silent=True) or {}
@@ -412,7 +445,7 @@ def atlas():
 
     page_context = atlas_workspace_context(current_path)
     if page_context["branch"] == "Wailuku Public Library" or current_path.startswith("/branch/wailuku"):
-        route_items = [i for i in SEARCH_INDEX if i.get("url", "").startswith("/branch/wailuku")]
+        route_items = wailuku_atlas_catalog(current_path, user_input)
     else:
         route_items = [i for i in SEARCH_INDEX if i.get("url", "").count("/") <= 3]
     route_catalog = "\n".join(f"- {i['label']}: {i['url']}" for i in route_items[:120])
@@ -425,6 +458,8 @@ def atlas():
         f"{route_catalog}\n"
     )
 
+    if current_path.startswith('/branch/wailuku'):
+        context_text += "\nWAILUKU FILE PREVIEWS\nResource cards show generated thumbnails where available. Staff can use Enlarge preview, close with Escape, and Open original file for the full document. Spreadsheet thumbnails show the first printed page, not every worksheet. Resource links open originals in the HSPLS work OneDrive. Edits to those originals are available when opened. The resource listing and thumbnails are snapshots and do not automatically refresh; moved or renamed files require link updates. Catalog labels and filenames do not establish a document's contents: do not claim to have read the file or edited it. Navigate to the resource's indexed workspace area to help the user find it.\n"
     contents = []
     for item in history[-ATLAS_MAX_HISTORY:]:
         role = "model" if item.get("role") == "model" else "user"
@@ -524,7 +559,6 @@ def manifest():
     }
     return Response(json.dumps(payload), mimetype='application/manifest+json')
 
-@app.get('/service-worker.js')
 def service_worker():
     js = '''const CACHE="mclw-master-v2-wailuku";const CORE=["/","/prototype","/offline","/static/css/app.css","/static/js/app.js","/static/favicon.svg","/static/assets/master-mark.svg","/static/assets/branch-fallback.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("/offline"))))});'''
     return Response(js, mimetype='application/javascript', headers={'Service-Worker-Allowed':'/'})
@@ -540,5 +574,9 @@ def not_found(error):
 @app.errorhandler(500)
 def server_error(error):
     return render_template('error.html', code=500, title='Something went wrong', message='The prototype hit an unexpected error. Return to the Staff Hub and try again.'), 500
+
+# Install access protection after the existing route definitions.
+from workspace_auth import configure_auth
+configure_auth(app, BASE_DIR)
 
 if __name__=='__main__': app.run(debug=os.environ.get('FLASK_DEBUG')=='1')

@@ -2,3 +2,6 @@ Flask>=3.0,<4
 gunicorn>=22,<24
 
 google-genai>=1.0,<2
+
+msal>=1.31,<2
+PyJWT[crypto]>=2.10,<3

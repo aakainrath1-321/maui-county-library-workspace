@@ -8,3 +8,13 @@ services:
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: WORKSPACE_PRODUCTION
+        value: "1"
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_TENANT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
+      - key: MICROSOFT_REDIRECT_URI
+        sync: false
